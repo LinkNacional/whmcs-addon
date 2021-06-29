@@ -5,7 +5,7 @@ use WHMCS\Database\Capsule;
 if (!function_exists('gofasnfeio_output')) {
     function gofasnfeio_output($vars) {
         require_once __DIR__ . '/functions.php';
-        $params = gnfe_config();
+        $params = nfeio_get_setting();
         foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'gnfewhmcsadminurl')->get(['value']) as $gnfewhmcsadminurl_) {
             $gnfewhmcsadminurl = $gnfewhmcsadminurl_->value;
         }
@@ -17,7 +17,7 @@ if (!function_exists('gofasnfeio_output')) {
             require_once __DIR__ . '/addonPage/outputsystemlegacy.php';
             return '';
         } elseif ($_GET['action'] == 'test_connection') {
-            $http_code = gnfe_test_connection()['http_code']; 
+            $http_code = nfeio_test_connection();
             if ($http_code == 401) {
                 ?>
                     <div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">API Key invalida</div>
@@ -161,7 +161,7 @@ if (!function_exists('gofasnfeio_output')) {
         }
         if ((int) $nfes_total > 0) {
             echo '
-            
+
             <a href="' . $gnfewhmcsadminurl . 'addonmodules.php?module=gofasnfeio&action=code_product" class="btn btn-primary" id="gnfe_cancel" title="Código de Serviços">Código de Serviços</a>
             <a href="' . $gnfewhmcsadminurl . 'addonmodules.php?module=gofasnfeio&action=nfeio_legacy" class="btn btn-primary" title="Sistema legado">Sistema legado</a>
             <a href="' . $gnfewhmcsadminurl . 'addonmodules.php?module=gofasnfeio&action=test_connection" class="btn btn-success" title="Sistema legado">Testar conexão</a>
@@ -177,13 +177,13 @@ if (!function_exists('gofasnfeio_output')) {
 								<th>Status</th>
 								<th>Ações</th>
 							</tr>
-							
+
 								' . $html_table . '
-							
+
 						</tbody>
 					</table>
 				</div>
-				
+
 				<div class="text-center">
 					<ul class="pagination">
 						' . $pagination . '
@@ -203,7 +203,7 @@ if (!function_exists('gofasnfeio_output')) {
             $client = localAPI('GetClientsDetails', ['clientid' => $invoice['userid'], 'stats' => false], false);
             $nfe_for_invoice = gnfe_get_local_nfe($_REQUEST['invoice_id'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at', 'rpsSerialNumber']);
             if (!$nfe_for_invoice['id']) {
-                $queue = gnfe_queue_nfe($_REQUEST['invoice_id'], true);
+                $queue = nfeio_queue_nfe($_REQUEST['invoice_id'], true);
                 if ($queue !== 'success') {
                     $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">Erro ao salvar nota fiscal no DB: ' . $queue . '</div>';
                     header_remove();
@@ -229,7 +229,7 @@ if (!function_exists('gofasnfeio_output')) {
             }
         }
         if ($_REQUEST['gnfe_cancel']) {
-            $delete_nfe = gnfe_delete_nfe($_REQUEST['gnfe_cancel']);
+            $delete_nfe = nfeio_delete_nfe($_REQUEST['gnfe_cancel']);
             if (!$delete_nfe->message) {
                 $gnfe_update_nfe = gnfe_update_nfe((object) ['id' => $_REQUEST['gnfe_cancel'], 'status' => 'Cancelled', 'servicesAmount' => $_REQUEST['services_amount'], 'environment' => $_REQUEST['environment'], 'flow_status' => $_REQUEST['flow_status']], $_REQUEST['user_id'], $_REQUEST['invoice_id'], 'n/a', $_REQUEST['created_at'], date('Y-m-d H:i:s'));
                 $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Nota fiscal cancelada com sucesso</div>';
@@ -247,7 +247,7 @@ if (!function_exists('gofasnfeio_output')) {
             }
         }
         if ($_REQUEST['gnfe_email']) {
-            $gnfe_email = gnfe_email_nfe($_REQUEST['gnfe_email']);
+            $gnfe_email = nfeio_email_nfe($_REQUEST['gnfe_email']);
             if (!$gnfe_email->message) {
                 $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Email Enviado com Sucesso</div>';
                 header_remove();

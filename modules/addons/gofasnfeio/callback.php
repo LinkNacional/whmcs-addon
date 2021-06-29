@@ -6,7 +6,7 @@ use WHMCS\Database\Capsule;
 $post = json_decode(file_get_contents('php://input'), true);
 if ($post) {
     require_once __DIR__ . '/functions.php';
-    $params = gnfe_config();
+    $params = nfeio_get_setting();
 
     //verificar o ambiente
     if ($params['NFEioEnvironment'] == 'on' && $post['environment'] == 'Production') {

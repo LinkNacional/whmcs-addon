@@ -5,7 +5,7 @@ if (!defined('WHMCS')) {
 }
 use WHMCS\Database\Capsule;
 
-$params = gnfe_config();
+$params = nfeio_get_setting();
 $data = getTodaysDate(false);
 $dataAtual = toMySQLDate($data);
 if (isset($params['issue_note_after']) && (int)$params['issue_note_after'] > 0) {

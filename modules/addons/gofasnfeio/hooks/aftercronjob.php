@@ -4,7 +4,7 @@ if (!defined('WHMCS')) {
     exit();
 }
 use WHMCS\Database\Capsule;
-$params = gnfe_config();
+$params = nfeio_get_setting();
 $dataAtual = date('Y-m-d H:i:s');
 
 if (Capsule::table('tbladdonmodules')->where('setting','=','last_cron')->count() == 0) {

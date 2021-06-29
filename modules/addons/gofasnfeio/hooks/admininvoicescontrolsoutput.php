@@ -5,7 +5,7 @@ if (!defined('WHMCS')) {
 }
 use WHMCS\Database\Capsule;
 
-$params = gnfe_config();
+$params = nfeio_get_setting();
 $nfe_for_invoice = gnfe_get_local_nfe($vars['invoiceid'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at']);
 $invoice = localAPI('GetInvoice', ['invoiceid' => $vars['invoiceid']], false);
 $client = localAPI('GetClientsDetails', ['clientid' => $vars['userid'], 'stats' => false], false);
@@ -18,8 +18,8 @@ if ($_REQUEST['gnfe_create']) {
         foreach ($invoice['items']['item'] as $value) {
             $line_items[] = $value['description']; //substr( $value['description'],  0, 100);
         }
-        $customer = gnfe_customer($invoice['userid'], $client);
-        $queue = gnfe_queue_nfe($vars['invoiceid'], true);
+        $customer = nfeio_get_customer($invoice['userid'], $client);
+        $queue = nfeio_queue_nfe($vars['invoiceid'], true);
         if ($queue !== 'success') {
             logModuleCall('gofas_nfeio', 'admininvoicecontorloutput - gnfe_create',$vars['invoiceid'], $queue, 'ERROR', '');
             header_remove();
@@ -47,7 +47,7 @@ if ($_REQUEST['gnfe_open']) {
 
 if ($_REQUEST['gnfe_cancel']) {
     foreach (Capsule::table('gofasnfeio')->where('invoice_id', '=', $_REQUEST['id'])->get(['id', 'nfe_id']) as $nfe) {
-        $delete_nfe = gnfe_delete_nfe($nfe->nfe_id);
+        $delete_nfe = nfeio_delete_nfe($nfe->nfe_id);
         if ($delete_nfe->message) {
             logModuleCall('gofas_nfeio', 'admininvoicecontorloutput - gnfe_cancel',$nfe->nfe_id, $delete_nfe, 'ERROR', '');
             $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">' . $delete_nfe->message . '</div>';
@@ -69,7 +69,7 @@ if ($_REQUEST['gnfe_cancel']) {
 }
 if ($_REQUEST['gnfe_email']) {
     foreach (Capsule::table('gofasnfeio')->where('invoice_id', '=', $_REQUEST['id'])->get(['id', 'nfe_id']) as $nfe) {
-        $gnfe_email = gnfe_email_nfe($_REQUEST['gnfe_email']);
+        $gnfe_email = nfeio_email_nfe($_REQUEST['gnfe_email']);
         if (!$gnfe_email->message) {
             logModuleCall('gofas_nfeio', 'admininvoicecontorloutput - gnfe_email',$_REQUEST['gnfe_email'], $gnfe_email, 'OK', '');
             $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Email Enviado com Sucesso</div>';

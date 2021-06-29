@@ -5,31 +5,45 @@ if (!defined('WHMCS')) {
 }
 use WHMCS\Database\Capsule;
 
-/**
- * Pega os dados da tabela tbladdonmodules do banco de dados da WHMCS.
- * @var $set string|boolean
- * @return array|string
- */
-if (!function_exists('gnfe_config')) {
-    function gnfe_config($set = false) {
-        $setting = [];
-        foreach (Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->get(['setting', 'value']) as $settings) {
-            $setting[$settings->setting] = $settings->value;
-        }
-        if ($set) {
-            return $setting[$set];
+if (!function_exists('nfeio_get_setting')) {
+    /**
+     * Get the module's data from the table tbladdonmodules.
+     *
+     * @param string|boolean $set
+     * @return array|string
+     */
+    function nfeio_get_setting($set = false) {
+        if (!$set) {
+            $setting = [];
+
+            foreach (Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->get(['setting', 'value']) as $settings) {
+                $setting[$settings->setting] = $settings->value;
+            }
+
+            return $setting;
         }
 
-        return $setting;
+        return Capsule::table('tbladdonmodules')
+                    ->where('module', '=', 'gofasnfeio')
+                    ->where('setting', '=', $set)
+                    ->get(['value'])[0]->value;
     }
 }
 
-if (!function_exists('gnfe_customer')) {
-    function gnfe_customer($user_id, $client) {
+if (!function_exists('nfeio_get_customer')) {
+    /**
+     * Returns the client data as customer data based on his id.
+     *
+     * @param string $user_id
+     * @param array $client
+     *
+     * @return array
+     */
+    function nfeio_get_customer($user_id, $client) {
         //Determine custom fields id
-        $CPF_id = gnfe_config('cpf_camp');
-        $CNPJ_id = gnfe_config('cnpj_camp');
-        $insc_municipal_id = gnfe_config('insc_municipal');
+        $CPF_id = nfeio_get_setting('cpf_camp');
+        $CNPJ_id = nfeio_get_setting('cnpj_camp');
+        $insc_municipal_id = nfeio_get_setting('insc_municipal');
 
         $insc_customfield_value = 'NF';
         // insc_municipal
@@ -50,9 +64,10 @@ if (!function_exists('gnfe_customer')) {
                 $cnpj_customfield_value = preg_replace('/[^0-9]/', '', $customfieldvalue->value);
             }
         }
-        logModuleCall('gofas_nfeio', 'gnfe_customer-cpf', $cpf_customfield_value, '','', '');
-        logModuleCall('gofas_nfeio', 'gnfe_customer-cnpj', $cnpj_customfield_value, '','', '');
-        logModuleCall('gofas_nfeio', 'gnfe_customer-municipal', $insc_customfield_value, '','', '');
+
+        logModuleCall('gofas_nfeio', 'nfeio_get_customer-cpf', $cpf_customfield_value, '','', '');
+        logModuleCall('gofas_nfeio', 'nfeio_get_customer-cnpj', $cnpj_customfield_value, '','', '');
+        logModuleCall('gofas_nfeio', 'nfeio_get_customer-municipal', $insc_customfield_value, '','', '');
 
         // Cliente possui CPF e CNPJ
         // CPF com 1 nº a menos, adiciona 0 antes do documento
@@ -116,6 +131,8 @@ if (!function_exists('gnfe_customer')) {
         }
     }
 }
+
+/*
 if (!function_exists('gnfe_customfields')) {
     function gnfe_customfields() {
         //Determine custom fields id
@@ -129,18 +146,29 @@ if (!function_exists('gnfe_customfields')) {
         return $customfields;
     }
 }
-if (!function_exists('gnfe_customfields_dropdow')) {
-    function gnfe_customfields_dropdow() {
-        //Determine custom fields id
+*/
+
+if (!function_exists('nfeio_get_custom_fields_dropdown')) {
+    /**
+     * Returns a array containing the fields of the tblcustomfields
+     * and the keys of the array are the rows id of that table.
+     *
+     * @return array
+     */
+    function nfeio_get_custom_fields_dropdown() {
         $customfields_array = [];
+
         foreach (Capsule::table('tblcustomfields')->where('type', '=', 'client')->get(['fieldname', 'id']) as $customfield) {
             $customfields_array[] = $customfield;
         }
+
         $customfields = json_decode(json_encode($customfields_array), true);
+
         if (!$customfields) {
             $dropFieldArray = ['0' => 'database error'];
         } elseif (count($customfields) >= 1) {
             $dropFieldArray = ['0' => 'selecione um campo'];
+
             foreach ($customfields as $key => $value) {
                 $dropFieldArray[$value['id']] = $value['fieldname'];
             }
@@ -151,35 +179,97 @@ if (!function_exists('gnfe_customfields_dropdow')) {
         return $dropFieldArray;
     }
 }
-if (!function_exists('gnfe_country_code')) {
-    function gnfe_country_code($country) {
-        $array = ['BD' => 'BGD', 'BE' => 'BEL', 'BF' => 'BFA', 'BG' => 'BGR', 'BA' => 'BIH', 'BB' => 'BRB', 'WF' => 'WLF', 'BL' => 'BLM', 'BM' => 'BMU', 'BN' => 'BRN', 'BO' => 'BOL', 'BH' => 'BHR', 'BI' => 'BDI', 'BJ' => 'BEN', 'BT' => 'BTN', 'JM' => 'JAM', 'BV' => 'BVT', 'BW' => 'BWA', 'WS' => 'WSM', 'BQ' => 'BES', 'BR' => 'BRA', 'BS' => 'BHS', 'JE' => 'JEY', 'BY' => 'BLR', 'BZ' => 'BLZ', 'RU' => 'RUS', 'RW' => 'RWA', 'RS' => 'SRB', 'TL' => 'TLS', 'RE' => 'REU', 'TM' => 'TKM', 'TJ' => 'TJK', 'RO' => 'ROU', 'TK' => 'TKL', 'GW' => 'GNB', 'GU' => 'GUM', 'GT' => 'GTM', 'GS' => 'SGS', 'GR' => 'GRC', 'GQ' => 'GNQ', 'GP' => 'GLP', 'JP' => 'JPN', 'GY' => 'GUY', 'GG' => 'GGY', 'GF' => 'GUF', 'GE' => 'GEO', 'GD' => 'GRD', 'GB' => 'GBR', 'GA' => 'GAB', 'SV' => 'SLV', 'GN' => 'GIN', 'GM' => 'GMB', 'GL' => 'GRL', 'GI' => 'GIB', 'GH' => 'GHA', 'OM' => 'OMN', 'TN' => 'TUN', 'JO' => 'JOR', 'HR' => 'HRV', 'HT' => 'HTI', 'HU' => 'HUN', 'HK' => 'HKG', 'HN' => 'HND', 'HM' => 'HMD', 'VE' => 'VEN', 'PR' => 'PRI', 'PS' => 'PSE', 'PW' => 'PLW', 'PT' => 'PRT', 'SJ' => 'SJM', 'PY' => 'PRY', 'IQ' => 'IRQ', 'PA' => 'PAN', 'PF' => 'PYF', 'PG' => 'PNG', 'PE' => 'PER', 'PK' => 'PAK', 'PH' => 'PHL', 'PN' => 'PCN', 'PL' => 'POL', 'PM' => 'SPM', 'ZM' => 'ZMB', 'EH' => 'ESH', 'EE' => 'EST', 'EG' => 'EGY', 'ZA' => 'ZAF', 'EC' => 'ECU', 'IT' => 'ITA', 'VN' => 'VNM', 'SB' => 'SLB', 'ET' => 'ETH', 'SO' => 'SOM', 'ZW' => 'ZWE', 'SA' => 'SAU', 'ES' => 'ESP', 'ER' => 'ERI', 'ME' => 'MNE', 'MD' => 'MDA', 'MG' => 'MDG', 'MF' => 'MAF', 'MA' => 'MAR', 'MC' => 'MCO', 'UZ' => 'UZB', 'MM' => 'MMR', 'ML' => 'MLI', 'MO' => 'MAC', 'MN' => 'MNG', 'MH' => 'MHL', 'MK' => 'MKD', 'MU' => 'MUS', 'MT' => 'MLT', 'MW' => 'MWI', 'MV' => 'MDV', 'MQ' => 'MTQ', 'MP' => 'MNP', 'MS' => 'MSR', 'MR' => 'MRT', 'IM' => 'IMN', 'UG' => 'UGA', 'TZ' => 'TZA', 'MY' => 'MYS', 'MX' => 'MEX', 'IL' => 'ISR', 'FR' => 'FRA', 'IO' => 'IOT', 'SH' => 'SHN', 'FI' => 'FIN', 'FJ' => 'FJI', 'FK' => 'FLK', 'FM' => 'FSM', 'FO' => 'FRO', 'NI' => 'NIC', 'NL' => 'NLD', 'NO' => 'NOR', 'NA' => 'NAM', 'VU' => 'VUT', 'NC' => 'NCL', 'NE' => 'NER', 'NF' => 'NFK', 'NG' => 'NGA', 'NZ' => 'NZL', 'NP' => 'NPL', 'NR' => 'NRU', 'NU' => 'NIU', 'CK' => 'COK', 'XK' => 'XKX', 'CI' => 'CIV', 'CH' => 'CHE', 'CO' => 'COL', 'CN' => 'CHN', 'CM' => 'CMR', 'CL' => 'CHL', 'CC' => 'CCK', 'CA' => 'CAN', 'CG' => 'COG', 'CF' => 'CAF', 'CD' => 'COD', 'CZ' => 'CZE', 'CY' => 'CYP', 'CX' => 'CXR', 'CR' => 'CRI', 'CW' => 'CUW', 'CV' => 'CPV', 'CU' => 'CUB', 'SZ' => 'SWZ', 'SY' => 'SYR', 'SX' => 'SXM', 'KG' => 'KGZ', 'KE' => 'KEN', 'SS' => 'SSD', 'SR' => 'SUR', 'KI' => 'KIR', 'KH' => 'KHM', 'KN' => 'KNA', 'KM' => 'COM', 'ST' => 'STP', 'SK' => 'SVK', 'KR' => 'KOR', 'SI' => 'SVN', 'KP' => 'PRK', 'KW' => 'KWT', 'SN' => 'SEN', 'SM' => 'SMR', 'SL' => 'SLE', 'SC' => 'SYC', 'KZ' => 'KAZ', 'KY' => 'CYM', 'SG' => 'SGP', 'SE' => 'SWE', 'SD' => 'SDN', 'DO' => 'DOM', 'DM' => 'DMA', 'DJ' => 'DJI', 'DK' => 'DNK', 'VG' => 'VGB', 'DE' => 'DEU', 'YE' => 'YEM', 'DZ' => 'DZA', 'US' => 'USA', 'UY' => 'URY', 'YT' => 'MYT', 'UM' => 'UMI', 'LB' => 'LBN', 'LC' => 'LCA', 'LA' => 'LAO', 'TV' => 'TUV', 'TW' => 'TWN', 'TT' => 'TTO', 'TR' => 'TUR', 'LK' => 'LKA', 'LI' => 'LIE', 'LV' => 'LVA', 'TO' => 'TON', 'LT' => 'LTU', 'LU' => 'LUX', 'LR' => 'LBR', 'LS' => 'LSO', 'TH' => 'THA', 'TF' => 'ATF', 'TG' => 'TGO', 'TD' => 'TCD', 'TC' => 'TCA', 'LY' => 'LBY', 'VA' => 'VAT', 'VC' => 'VCT', 'AE' => 'ARE', 'AD' => 'AND', 'AG' => 'ATG', 'AF' => 'AFG', 'AI' => 'AIA', 'VI' => 'VIR', 'IS' => 'ISL', 'IR' => 'IRN', 'AM' => 'ARM', 'AL' => 'ALB', 'AO' => 'AGO', 'AQ' => 'ATA', 'AS' => 'ASM', 'AR' => 'ARG', 'AU' => 'AUS', 'AT' => 'AUT', 'AW' => 'ABW', 'IN' => 'IND', 'AX' => 'ALA', 'AZ' => 'AZE', 'IE' => 'IRL', 'ID' => 'IDN', 'UA' => 'UKR', 'QA' => 'QAT', 'MZ' => 'MOZ'];
+
+if (!function_exists('nfeio_country_code')) {
+    /**
+     * Returns a value of the array $array if its key matches with the param $country.
+     *
+     * @param string
+     * @return string
+     */
+    function nfeio_country_code($country) {
+        $array = ['BD' => 'BGD', 'BE' => 'BEL', 'BF' => 'BFA', 'BG' => 'BGR', 'BA' => 'BIH', 'BB' => 'BRB',
+        'WF' => 'WLF', 'BL' => 'BLM', 'BM' => 'BMU', 'BN' => 'BRN', 'BO' => 'BOL', 'BH' => 'BHR', 'BI' => 'BDI',
+        'BJ' => 'BEN', 'BT' => 'BTN', 'JM' => 'JAM', 'BV' => 'BVT', 'BW' => 'BWA', 'WS' => 'WSM', 'BQ' => 'BES',
+        'BR' => 'BRA', 'BS' => 'BHS', 'JE' => 'JEY', 'BY' => 'BLR', 'BZ' => 'BLZ', 'RU' => 'RUS', 'RW' => 'RWA',
+        'RS' => 'SRB', 'TL' => 'TLS', 'RE' => 'REU', 'TM' => 'TKM', 'TJ' => 'TJK', 'RO' => 'ROU', 'TK' => 'TKL',
+        'GW' => 'GNB', 'GU' => 'GUM', 'GT' => 'GTM', 'GS' => 'SGS', 'GR' => 'GRC', 'GQ' => 'GNQ', 'GP' => 'GLP',
+        'JP' => 'JPN', 'GY' => 'GUY', 'GG' => 'GGY', 'GF' => 'GUF', 'GE' => 'GEO', 'GD' => 'GRD', 'GB' => 'GBR',
+        'GA' => 'GAB', 'SV' => 'SLV', 'GN' => 'GIN', 'GM' => 'GMB', 'GL' => 'GRL', 'GI' => 'GIB', 'GH' => 'GHA',
+        'OM' => 'OMN', 'TN' => 'TUN', 'JO' => 'JOR', 'HR' => 'HRV', 'HT' => 'HTI', 'HU' => 'HUN', 'HK' => 'HKG',
+        'HN' => 'HND', 'HM' => 'HMD', 'VE' => 'VEN', 'PR' => 'PRI', 'PS' => 'PSE', 'PW' => 'PLW', 'PT' => 'PRT',
+        'SJ' => 'SJM', 'PY' => 'PRY', 'IQ' => 'IRQ', 'PA' => 'PAN', 'PF' => 'PYF', 'PG' => 'PNG', 'PE' => 'PER',
+        'PK' => 'PAK', 'PH' => 'PHL', 'PN' => 'PCN', 'PL' => 'POL', 'PM' => 'SPM', 'ZM' => 'ZMB', 'EH' => 'ESH',
+        'EE' => 'EST', 'EG' => 'EGY', 'ZA' => 'ZAF', 'EC' => 'ECU', 'IT' => 'ITA', 'VN' => 'VNM', 'SB' => 'SLB',
+        'ET' => 'ETH', 'SO' => 'SOM', 'ZW' => 'ZWE', 'SA' => 'SAU', 'ES' => 'ESP', 'ER' => 'ERI', 'ME' => 'MNE',
+        'MD' => 'MDA', 'MG' => 'MDG', 'MF' => 'MAF', 'MA' => 'MAR', 'MC' => 'MCO', 'UZ' => 'UZB', 'MM' => 'MMR',
+        'ML' => 'MLI', 'MO' => 'MAC', 'MN' => 'MNG', 'MH' => 'MHL', 'MK' => 'MKD', 'MU' => 'MUS', 'MT' => 'MLT',
+        'MW' => 'MWI', 'MV' => 'MDV', 'MQ' => 'MTQ', 'MP' => 'MNP', 'MS' => 'MSR', 'MR' => 'MRT', 'IM' => 'IMN',
+        'UG' => 'UGA', 'TZ' => 'TZA', 'MY' => 'MYS', 'MX' => 'MEX', 'IL' => 'ISR', 'FR' => 'FRA', 'IO' => 'IOT',
+        'SH' => 'SHN', 'FI' => 'FIN', 'FJ' => 'FJI', 'FK' => 'FLK', 'FM' => 'FSM', 'FO' => 'FRO', 'NI' => 'NIC',
+        'NL' => 'NLD', 'NO' => 'NOR', 'NA' => 'NAM', 'VU' => 'VUT', 'NC' => 'NCL', 'NE' => 'NER', 'NF' => 'NFK',
+        'NG' => 'NGA', 'NZ' => 'NZL', 'NP' => 'NPL', 'NR' => 'NRU', 'NU' => 'NIU', 'CK' => 'COK', 'XK' => 'XKX',
+        'CI' => 'CIV', 'CH' => 'CHE', 'CO' => 'COL', 'CN' => 'CHN', 'CM' => 'CMR', 'CL' => 'CHL', 'CC' => 'CCK',
+        'CA' => 'CAN', 'CG' => 'COG', 'CF' => 'CAF', 'CD' => 'COD', 'CZ' => 'CZE', 'CY' => 'CYP', 'CX' => 'CXR',
+        'CR' => 'CRI', 'CW' => 'CUW', 'CV' => 'CPV', 'CU' => 'CUB', 'SZ' => 'SWZ', 'SY' => 'SYR', 'SX' => 'SXM',
+        'KG' => 'KGZ', 'KE' => 'KEN', 'SS' => 'SSD', 'SR' => 'SUR', 'KI' => 'KIR', 'KH' => 'KHM', 'KN' => 'KNA',
+        'KM' => 'COM', 'ST' => 'STP', 'SK' => 'SVK', 'KR' => 'KOR', 'SI' => 'SVN', 'KP' => 'PRK', 'KW' => 'KWT',
+        'SN' => 'SEN', 'SM' => 'SMR', 'SL' => 'SLE', 'SC' => 'SYC', 'KZ' => 'KAZ', 'KY' => 'CYM', 'SG' => 'SGP',
+        'SE' => 'SWE', 'SD' => 'SDN', 'DO' => 'DOM', 'DM' => 'DMA', 'DJ' => 'DJI', 'DK' => 'DNK', 'VG' => 'VGB',
+        'DE' => 'DEU', 'YE' => 'YEM', 'DZ' => 'DZA', 'US' => 'USA', 'UY' => 'URY', 'YT' => 'MYT', 'UM' => 'UMI',
+        'LB' => 'LBN', 'LC' => 'LCA', 'LA' => 'LAO', 'TV' => 'TUV', 'TW' => 'TWN', 'TT' => 'TTO', 'TR' => 'TUR',
+        'LK' => 'LKA', 'LI' => 'LIE', 'LV' => 'LVA', 'TO' => 'TON', 'LT' => 'LTU', 'LU' => 'LUX', 'LR' => 'LBR',
+        'LS' => 'LSO', 'TH' => 'THA', 'TF' => 'ATF', 'TG' => 'TGO', 'TD' => 'TCD', 'TC' => 'TCA', 'LY' => 'LBY',
+        'VA' => 'VAT', 'VC' => 'VCT', 'AE' => 'ARE', 'AD' => 'AND', 'AG' => 'ATG', 'AF' => 'AFG', 'AI' => 'AIA',
+        'VI' => 'VIR', 'IS' => 'ISL', 'IR' => 'IRN', 'AM' => 'ARM', 'AL' => 'ALB', 'AO' => 'AGO', 'AQ' => 'ATA',
+        'AS' => 'ASM', 'AR' => 'ARG', 'AU' => 'AUS', 'AT' => 'AUT', 'AW' => 'ABW', 'IN' => 'IND', 'AX' => 'ALA',
+        'AZ' => 'AZE', 'IE' => 'IRL', 'ID' => 'IDN', 'UA' => 'UKR', 'QA' => 'QAT', 'MZ' => 'MOZ'];
 
         return $array[$country];
     }
 }
-if (!function_exists('gnfe_ibge')) {
-    function gnfe_ibge($zip) {
+
+if (!function_exists('nfeio_get_city_postal_code')) {
+    /**
+     * Returns the postal code of a zip code.
+     *
+     * @param string $zip
+     * @return string $code
+     */
+    function nfeio_get_city_postal_code($zip) {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://open.nfe.io/v1/cities/' . $zip . '/postalcode');
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://open.nfe.io/v1/cities/' . $zip . '/postalcode',
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_RETURNTRANSFER => true
+        ]);
+
         $response = curl_exec($curl);
         $err = curl_error($curl);
 
         curl_close($curl);
+
         $city = json_decode(json_encode(json_decode($response)));
 
         if ($city->message || $err) {
-            logModuleCall('gofas_nfeio', 'gnfe_ibge', $zip, $city->message, 'ERROR', '');
+            logModuleCall('gofas_nfeio', 'nfeio_get_city_postal_code', $zip, $city->message, 'ERROR', '');
             return 'ERROR';
         } else {
             return $city->city->code;
         }
     }
 }
-if (!function_exists('gnfe_queue_nfe')) {
-    function gnfe_queue_nfe($invoice_id, $create_all = false) {
+
+if (!function_exists('nfeio_queue_nfe')) {
+    /**
+     * Updates the NFe services_amount or saves the NFe in the database.
+     *
+     * @param string $invoice_id
+     * @param bool $create_all
+     *
+     * @return string
+     */
+    function nfeio_queue_nfe($invoice_id, $create_all = false) {
         $invoice = localAPI('GetInvoice', ['invoiceid' => $invoice_id], false);
         $itens = get_product_invoice($invoice_id);
 
@@ -210,9 +300,9 @@ if (!function_exists('gnfe_queue_nfe')) {
                         $mount_item = floatval($item['amount']);
                         $mount = $mountDB + $mount_item;
 
-                        $update_nfe = Capsule::table('gofasnfeio')->where('id', '=', $service_code_row[0]->id)->update(['services_amount' => $mount]);
+                        Capsule::table('gofasnfeio')->where('id', '=', $service_code_row[0]->id)->update(['services_amount' => $mount]);
                     } else {
-                        $save_nfe = Capsule::table('gofasnfeio')->insert($data);
+                        Capsule::table('gofasnfeio')->insert($data);
                     }
                 } catch (\Exception $e) {
                     return $e->getMessage();
@@ -223,6 +313,7 @@ if (!function_exists('gnfe_queue_nfe')) {
     }
 }
 
+/*
 if (!function_exists('gnfe_queue_nfe_edit')) {
     function gnfe_queue_nfe_edit($invoice_id, $gofasnfeio_id) {
         $invoice = localAPI('GetInvoice', ['invoiceid' => $invoice_id], false);
@@ -248,7 +339,7 @@ if (!function_exists('gnfe_queue_nfe_edit')) {
 
             if ((string) $nfe_for_invoice['status'] === (string) 'Cancelled' or (string) $nfe_for_invoice['status'] === (string) 'Error') {
                 try {
-                    $update_nfe = Capsule::table('gofasnfeio')->where('invoice_id', '=', $invoice_id)->where('id', '=', $gofasnfeio_id)->update($data);
+                    Capsule::table('gofasnfeio')->where('invoice_id', '=', $invoice_id)->where('id', '=', $gofasnfeio_id)->update($data);
                 } catch (\Exception $e) {
                     return $e->getMessage();
                 }
@@ -258,76 +349,102 @@ if (!function_exists('gnfe_queue_nfe_edit')) {
         return 'success';
     }
 }
+*/
 
-if (!function_exists('gnfe_issue_nfe')) {
-    function gnfe_issue_nfe($postfields) {
-        $webhook_url = gnfe_whmcs_url() . 'modules/addons/gofasnfeio/callback.php';
+if (!function_exists('nfeio_issue_nfe')) {
+    /**
+     * Sends a NFe to the NFe.io.
+     *
+     * @param array $postfields
+     * @return mixed
+     */
+    function nfeio_issue_nfe($postfields) {
+        $webhook_url = nfeio_get_whmcs_url() . 'modules/addons/gofasnfeio/callback.php';
+
         foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'gnfe_webhook_id')->get(['value']) as $gnfe_webhook_id_) {
             $gnfe_webhook_id = $gnfe_webhook_id_->value;
         }
+
         if ($gnfe_webhook_id) {
             $check_webhook = gnfe_check_webhook($gnfe_webhook_id);
             $error = '';
             if ($check_webhook['message']) {
-                logModuleCall('gofas_nfeio', 'gnfe_issue_nfe - check_webhook', $gnfe_webhook_id, $check_webhook['message'], 'ERROR', '');
+                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - check_webhook', $gnfe_webhook_id, $check_webhook['message'], 'ERROR', '');
             }
         }
+
         if ($gnfe_webhook_id and (string) $check_webhook['hooks']['url'] !== (string) $webhook_url) {
             $create_webhook = gnfe_create_webhook($webhook_url);
+
             if ($create_webhook['message']) {
-                logModuleCall('gofas_nfeio', 'gnfe_issue_nfe - gnfe_create_webhook', $webhook_url, $create_webhook['message'], 'ERROR', '');
+                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - gnfe_create_webhook', $webhook_url, $create_webhook['message'], 'ERROR', '');
             }
+
             if ($create_webhook['hooks']['id']) {
                 try {
                     Capsule::table('tblconfiguration')->where('setting', 'gnfe_webhook_id')->update(['value' => $create_webhook['hooks']['id'], 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
                 } catch (Exception $e) {
-                    logModuleCall('gofas_nfeio', 'gnfe_issue_nfe - Capsule::table(tblconfiguration) update', '', $e->getMessage(), 'ERROR', '');
+                    logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - Capsule::table(tblconfiguration) update', '', $e->getMessage(), 'ERROR', '');
                 }
             }
+
             $delete_webhook = gnfe_delete_webhook($gnfe_webhook_id);
+
             if ($delete_webhook['message']) {
-                logModuleCall('gofas_nfeio', 'gnfe_issue_nfe - gnfe_delete_webhook', $gnfe_webhook_id, $delete_webhook, 'ERROR', '');
+                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - gnfe_delete_webhook', $gnfe_webhook_id, $delete_webhook, 'ERROR', '');
             }
         }
         if (!$gnfe_webhook_id) {
             $create_webhook = gnfe_create_webhook($webhook_url);
+
             if ($create_webhook['message']) {
-                logModuleCall('gofas_nfeio', 'gnfe_issue_nfe - gnfe_create_webhook', $webhook_url, $create_webhook, 'ERROR', '');
+                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - gnfe_create_webhook', $webhook_url, $create_webhook, 'ERROR', '');
             }
+
             if ($create_webhook['hooks']['id']) {
                 try {
                     Capsule::table('tblconfiguration')->insert(['setting' => 'gnfe_webhook_id', 'value' => $create_webhook['hooks']['id'], 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
                 } catch (Exception $e) {
-                    logModuleCall('gofas_nfeio', 'gnfe_issue_nfe - Capsule::table(tblconfiguration) insert', '', $e->getMessage(), 'ERROR', '');
+                    logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - Capsule::table(tblconfiguration) insert', '', $e->getMessage(), 'ERROR', '');
                 }
             }
         }
 
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id') . '/serviceinvoices');
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($postfields));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices',
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: text/json',
+                'Accept: application/json',
+                'Authorization: ' . nfeio_get_setting('api_key')
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($postfields),
+            CURLOPT_RETURNTRANSFER => true
+        ]);
+
         $response = curl_exec($curl);
         $err = curl_error($curl);
         $info = curl_getinfo($curl);
+
         curl_close($curl);
-        logModuleCall('gofas_nfeio', 'gnfe_issue_nfe - curl_init', $error, $info, '', '');
-        logModuleCall('gofas_nfeio', 'gnfe_issue_nfe - CURLOPT_POSTFIELDS', json_encode($postfields), '', '', '');
-        if ($err) {
-            return (object) ['message' => $err, 'info' => $info];
-        } else {
-            return json_decode(json_encode(json_decode($response)));
-        }
+
+        logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - curl_init', $error, $info, '', '');
+        logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - CURLOPT_POSTFIELDS', json_encode($postfields), '', '', '');
+
+        return $err
+            ? (object) ['message' => $err, 'info' => $info]
+            : json_decode(json_encode(json_decode($response)));
     }
 }
+
+/*
 if (!function_exists('gnfe_get_nfe')) {
     function gnfe_get_nfe($nf) {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id') . '/serviceinvoices/' . $nf);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
+        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nf);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         $response = curl_exec($curl);
@@ -336,127 +453,155 @@ if (!function_exists('gnfe_get_nfe')) {
         return json_decode($response);
     }
 }
+*/
 
-/**
- * Retorna os dados necessários na função gnfe_put_rps().
- *
- * @return array
- */
-if (!function_exists('gnfe_get_company_info')) {
-    function gnfe_get_company_info() {
+if (!function_exists('nfeio_get_company_info')) {
+    /**
+     * Returns the current company data fetched from NFe.io.
+     *
+     * @return array
+     */
+    function nfeio_get_company_info() {
         $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id'),
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id'),
             CURLOPT_TIMEOUT => 30,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
                 'Accept: application/json',
-                'Authorization: ' . gnfe_config('api_key')
+                'Authorization: ' . nfeio_get_setting('api_key')
             ]
         ]);
 
         $response = json_decode(curl_exec($curl), true);
         $response = $response['companies'];
+
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
         curl_close($curl);
 
-        if ($httpCode === 200) {
-            return $response;
-        } else {
-            return array(
-                'error' =>
-                    'Erro: ' . $httpCode . '|'
-                    . ' Resposta: ' . $response . '|'
-                    . ' Consulte: https://nfe.io/docs/desenvolvedores/rest-api/nota-fiscal-de-servico-v1/#/Companies/Companies_Get'
-            );
-        }
+        return $httpCode === 200
+            ? $response
+            : array('error' =>
+                'Http code: ' . $httpCode . '| ' .
+                'Resposta: ' . $response . '| ' .
+                'Consulte: https://nfe.io/docs/desenvolvedores/rest-api/nota-fiscal-de-servico-v1/#/Companies/Companies_Get');
     }
 }
 
-/**
- * Responsável por enviar o último RPS para a NFe.
- *
- * @param int $rpsNumber
- *
- * @return void
- */
-if (!function_exists('gnfe_put_rps')) {
-    function gnfe_put_rps($company, $rpsNumber) {
-        $company['rpsNumber'] = $rpsNumber + 1;
-        $requestBody = json_encode($company);
+if (!function_exists('nfeio_transfer_rps_number_handling')) {
+    /**
+     * Transfer the RPS number handling to the NFe.io.
+     *
+     * @param array $nfeioCompany
+     * @param int $rpsNumber
+     */
+    function nfeio_transfer_rps_number_handling($nfeioCompany, $rpsNumber) {
+        $nfeioCompany['rpsNumber'] = $rpsNumber + 1;
+        $requestBody = json_encode($nfeioCompany);
 
         $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id'),
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id'),
             CURLOPT_TIMEOUT => 30,
             CURLOPT_CUSTOMREQUEST => 'PUT',
             CURLOPT_POSTFIELDS => $requestBody,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
                 'Accept: application/json',
-                'Authorization: ' . gnfe_config('api_key')
+                'Authorization: ' . nfeio_get_setting('api_key')
             ]
         ]);
+
         $response = json_decode(curl_exec($curl), true);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
         curl_close($curl);
 
         if ($httpCode !== 200) {
             $response =
-                ' Http code: ' . $httpCode . '|' .
-                ' Resposta: ' . $response . '|' .
-                ' Consulte: https://nfe.io/docs/desenvolvedores/rest-api/nota-fiscal-de-servico-v1/#/Companies/Companies_Put';
-            logModuleCall('gofas_nfeio', 'gnfe_put_rps', $requestBody, $response, '', '');
-        } else {
-            $nfe_rps = intval(gnfe_get_nfes()['rpsNumber']);
-            $whmcs_rps = intval(gnfe_config('rps_number'));
+                'Http code: ' . $httpCode . ' | ' .
+                'Resposta: ' . $response . ' | ' .
+                'Consulte: https://nfe.io/docs/desenvolvedores/rest-api/nota-fiscal-de-servico-v1/#/Companies/Companies_Put';
 
-            // Verifica se o RPS na NFe é maior ou igual ao RPS no WHMCS para garantir que a ação foi efetivada.
+            logModuleCall('gofas_nfeio', 'nfeio_transfer_rps_number_handling', $requestBody, $response, '', '');
+        } else {
+            $nfe_rps = intval(nfeio_get_last_nfe()['rpsNumber']);
+            $whmcs_rps = intval(nfeio_get_setting('rps_number'));
+
+            // Verify if the NFe's RPS is greater than or equals to the RPS located in WHMCS.
             if ($nfe_rps >= $whmcs_rps) {
                 Capsule::table('tbladdonmodules')->where('module', 'gofasnfeio')->where('setting', 'rps_number')->update(['value' => 'RPS administrado pela NFe.']);
             } else {
-                logModuleCall('gofas_nfeio', 'gnfe_put_rps', $requestBody, 'Erro ao tentar passar tratativa de RPS para NFe. ' . $response, '', '');
+                logModuleCall('gofas_nfeio', 'nfeio_transfer_rps_number_handling', $requestBody, 'Erro ao tentar passar tratativa de RPS para NFe. ' . $response, '', '');
             }
         }
     }
 }
 
-if (!function_exists('gnfe_test_connection')) {
-    function gnfe_test_connection() {
+if (!function_exists('nfeio_test_connection')) {
+    /**
+     * Returns the HTTP code of an request sent to NFe.io in order to test
+     * if the connection is available.
+     *
+     * @return int $httpCode
+     */
+    function nfeio_test_connection() {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id') . '/serviceinvoices');
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $response = curl_exec($curl);
-        $info = curl_getinfo($curl);
-        $err = curl_error($curl);
-        logModuleCall('gofas_nfeio', 'gnfe_issue_nfe - curl_init', $err, $info, '', '');
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices',
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: text/json',
+                'Accept: application/json',
+                'Authorization: ' . nfeio_get_setting('api_key')
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_RETURNTRANSFER => true
+        ]);
+        curl_exec($curl);
+
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+        logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - curl_init', curl_error($curl), $httpCode, '', '');
         curl_close($curl);
 
-        return $info;
+        return $httpCode;
     }
 }
+
 /**
  * Pega o JSON da última nota fiscal emitida do banco de dados da NFe.
  *
  * @return array;
  */
-if (!function_exists('gnfe_get_nfes')) {
-    function gnfe_get_nfes() {
+if (!function_exists('nfeio_get_last_nfe')) {
+    /**
+     * Returns the JSON of the latest issued NFe.
+     *
+     * @return array
+     */
+    function nfeio_get_last_nfe() {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id') . '/serviceinvoices?pageCount=1&pageIndex=1');
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices?pageCount=1&pageIndex=1',
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: text/json',
+                'Accept: application/json',
+                'Authorization: ' . nfeio_get_setting('api_key')
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_RETURNTRANSFER => true
+        ]);
+
         $response = curl_exec($curl);
         curl_close($curl);
+
         return json_decode($response, true)['serviceInvoices']['0'];
     }
 }
 
+/*
 if (!function_exists('gnfe_get_invoice_nfes')) {
     function gnfe_get_invoice_nfes($invoice_id) {
         $nfes = [];
@@ -478,29 +623,57 @@ if (!function_exists('gnfe_get_invoice_nfes')) {
         return $fieldArray;
     }
 }
-if (!function_exists('gnfe_delete_nfe')) {
-    function gnfe_delete_nfe($nf) {
+*/
+
+if (!function_exists('nfeio_delete_nfe')) {
+    /**
+     * Sends a DELETE request to the NFe.io in order to delete de NFe.
+     *
+     * @param string|int $nf
+     * @return mixed
+     */
+    function nfeio_delete_nfe($nf) {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id') . '/serviceinvoices/' . $nf);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nf,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: text/json',
+                'Accept: application/json',
+                'Authorization: ' . nfeio_get_setting('api_key')
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
+        ]);
+
         $response = curl_exec($curl);
         curl_close($curl);
 
         return json_decode($response);
     }
 }
-if (!function_exists('gnfe_email_nfe')) {
-    function gnfe_email_nfe($nf) {
-        if ('on' == gnfe_config('gnfe_email_nfe_config')) {
+
+if (!function_exists('nfeio_email_nfe')) {
+    /**
+     * Sends a request to the NFe.io in order to the NFe be sent to its borrower.
+     *
+     * @return mixed;
+     */
+    function nfeio_email_nfe($nf) {
+        if ('on' == nfeio_get_setting('gnfe_email_nfe_config')) {
             $curl = curl_init();
-            curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id') . '/serviceinvoices/' . $nf . '/sendemail');
-            curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
+            curl_setopt_array($curl, [
+                CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nf . '/sendemail',
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: text/json',
+                    'Accept: application/json',
+                    'Authorization: ' . nfeio_get_setting('api_key')
+                ],
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_RETURNTRANSFER => 1,
+                CURLOPT_CUSTOMREQUEST => 'PUT'
+            ]);
+
             $response = curl_exec($curl);
             curl_close($curl);
 
@@ -508,53 +681,79 @@ if (!function_exists('gnfe_email_nfe')) {
         }
     }
 }
-if (!function_exists('gnfe_pdf_nfe')) {
-    function gnfe_pdf_nfe($nf) {
+
+if (!function_exists('nfeio_pdf_nfe')) {
+    /**
+     * Sends a request to the NFe.io in order to a PDF of the NFe be generated.
+     *
+     * @return mixed
+     */
+    function nfeio_pdf_nfe($nf) {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id') . '/serviceinvoices/' . $nf . '/pdf');
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-type: application/pdf', 'Authorization: ' . gnfe_config('api_key')]);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 10);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
-        header('Content-type: application/pdf');
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nf . '/pdf',
+            CURLOPT_HTTPHEADER => [
+                'Content-type: application/pdf',
+                'Authorization: ' . nfeio_get_setting('api_key')
+            ],
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => 1,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_CONNECTTIMEOUT => 30
+        ]);
         $result = curl_exec($curl);
         curl_close($curl);
 
         return $result;
     }
 }
-if (!function_exists('gnfe_xml_nfe')) {
-    function gnfe_xml_nfe($nf) {
+
+if (!function_exists('nfeio_xml_nfe')) {
+    /**
+     * Sends a request to the NFe.io in orderto a XML of the NFe be generated.
+     *
+     * @return mixed
+     */
+    function nfeio_xml_nfe($nf) {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id') . '/serviceinvoices/' . $nf . '/xml');
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nf . '/xml',
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: text/json',
+                'Accept: application/json',
+                'Authorization: ' . nfeio_get_setting('api_key')
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_RETURNTRANSFER => 1,
+        ]);
         $response = curl_exec($curl);
         curl_close($curl);
 
         return json_decode($response);
     }
 }
-if (!function_exists('gnfe_whmcs_url')) {
-    function gnfe_whmcs_url() {
-        foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'gnfewhmcsurl')->get(['value']) as $gnfewhmcsurl_) {
-            $gnfewhmcsurl = $gnfewhmcsurl_->value;
-        }
 
-        return $gnfewhmcsurl;
+if (!function_exists('nfeio_get_whmcs_url')) {
+    /**
+     * Returns the URL of WHMCS.
+     *
+     * @return string
+     */
+    function nfeio_get_whmcs_url() {
+        return Capsule::table('tblconfiguration')
+                ->where('setting', '=', 'gnfewhmcsurl')
+                ->get(['value'])[0]['value'];
     }
 }
 
-if (!function_exists('gnfe_xml_nfe')) {
-    function gnfe_xml_nfe($nf) {
+/*
+if (!function_exists('nfeio_xml_nfe')) {
+    function nfeio_xml_nfe($nf) {
         $curl = curl_init();
 
         curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id') . '/serviceinvoices/' . $nf . '/xml',
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nf . '/xml',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -565,7 +764,7 @@ if (!function_exists('gnfe_xml_nfe')) {
             CURLOPT_HTTPHEADER => [
                 'Content-Type: text/json',
                 'Accept: application/json',
-                'Authorization:' . gnfe_config('api_key'),
+                'Authorization:' . nfeio_get_setting('api_key'),
             ],
         ]);
 
@@ -576,17 +775,22 @@ if (!function_exists('gnfe_xml_nfe')) {
         return $response;
     }
 }
+*/
 
-if (!function_exists('gnfe_whmcs_admin_url')) {
-    function gnfe_whmcs_admin_url() {
-        foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'gnfewhmcsadminurl')->get(['value']) as $gnfewhmcsadminurl_) {
-            $gnfewhmcsadminurl = $gnfewhmcsadminurl_->value;
-        }
-
-        return $gnfewhmcsadminurl;
+if (!function_exists('nfeio_get_whmcs_admin_url')) {
+    /**
+     * Returns the admin URL of WHMCS.
+     *
+     * @return string
+     */
+    function nfeio_get_whmcs_admin_url() {
+        return Capsule::table('tblconfiguration')
+            ->where('setting', '=', 'gnfewhmcsadminurl')
+            ->get(['value'])[0]['value'];
     }
 }
 
+/*
 if (!function_exists('gnfe_save_nfe')) {
     function gnfe_save_nfe($nfe, $user_id, $invoice_id, $pdf, $created_at, $updated_at) {
         if ($nfe->servicesAmount == -1) {
@@ -616,7 +820,12 @@ if (!function_exists('gnfe_save_nfe')) {
         }
     }
 }
+*/
+
 if (!function_exists('gnfe_update_nfe')) {
+    /**
+     * 
+     */
     function gnfe_update_nfe($nfe, $user_id, $invoice_id, $pdf, $created_at, $updated_at, $id_gofasnfeio = false) {
         $data = [
             'invoice_id' => $invoice_id,
@@ -641,7 +850,7 @@ if (!function_exists('gnfe_update_nfe')) {
                 $id = $id_gofasnfeio;
                 $camp = 'id';
             }
-            $save_nfe = Capsule::table('gofasnfeio')->where($camp, '=', $id)->update($data);
+            Capsule::table('gofasnfeio')->where($camp, '=', $id)->update($data);
 
             return 'success';
         } catch (\Exception $e) {
@@ -669,7 +878,7 @@ if (!function_exists('gnfe_check_webhook')) {
     function gnfe_check_webhook($id) {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/hooks/' . $id);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         $response = curl_exec($curl);
@@ -683,7 +892,7 @@ if (!function_exists('gnfe_create_webhook')) {
         try {
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/hooks');
-            curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Accept: aplication/json', 'Authorization: ' . gnfe_config('api_key')]);
+            curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Accept: aplication/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
             curl_setopt($curl, CURLOPT_TIMEOUT, 30);
             curl_setopt($curl, CURLOPT_POST, 1);
             curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode(['url' => $url, 'contentType' => 'application/json', 'secret' => (string)time(), 'events' => ['issue', 'cancel', 'WaitingCalculateTaxes'], 'status' => 'Active',  ]));
@@ -700,7 +909,7 @@ if (!function_exists('gnfe_delete_webhook')) {
     function gnfe_delete_webhook($id) {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/hooks/' . $id);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
@@ -759,8 +968,8 @@ if (!function_exists('gnfe_nfe_flowStatus')) {
 if (!function_exists('gnfe_get_company')) {
     function gnfe_get_company() {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . gnfe_config('company_id'));
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . gnfe_config('api_key')]);
+        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id'));
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         $response = curl_exec($curl);
@@ -794,7 +1003,7 @@ function get_product_invoice($invoice_id) {
     $row = $statement->fetchAll();
     $pdo->commit();
 
-    $tax_check = gnfe_config('tax');
+    $tax_check = nfeio_get_setting('tax');
     foreach ($row as $item) {
         $hosting_id = $item['relid'];
 

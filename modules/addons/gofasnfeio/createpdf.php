@@ -8,7 +8,7 @@ use WHMCS\Database\Capsule;
         $row = Capsule::table('gofasnfeio')->where('id', '=', $nfe_id)->get(['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'flow_status', 'pdf', 'created_at', 'updated_at', 'id']);
         $nfe = $row[0];
         if ((string) $nfe->status === (string) 'Issued') {
-            $nfe_for_invoice = gnfe_pdf_nfe($nfe->nfe_id);
+            $nfe_for_invoice = nfeio_pdf_nfe($nfe->nfe_id);
             echo $nfe_for_invoice;
         } else {
             echo 'Not Found';
@@ -16,11 +16,11 @@ use WHMCS\Database\Capsule;
 
     exit();
 
-    function gnfe_pdf_nfe($nf)
+    function nfeio_pdf_nfe($nf)
     {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/'.gnfe_config('company_id').'/serviceinvoices/'.$nf.'/pdf');
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-type: application/pdf', 'Authorization: '.gnfe_config('api_key')]);
+        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/'.nfeio_get_setting('company_id').'/serviceinvoices/'.$nf.'/pdf');
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-type: application/pdf', 'Authorization: '.nfeio_get_setting('api_key')]);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -33,7 +33,7 @@ use WHMCS\Database\Capsule;
 
         return $result;
     }
-    function gnfe_config($set = false)
+    function nfeio_get_setting($set = false)
     {
         $setting = [];
         foreach (Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->get(['setting', 'value']) as $settings) {

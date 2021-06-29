@@ -49,7 +49,7 @@ if (!function_exists('gofasnfeio_config')) {
         $module_version_int = (int) preg_replace('/[^0-9]/', '', $module_version);
 
         // Versão do módulo que consta no banco de dados.
-        $previous_version = gnfe_config('module_version');
+        $previous_version = nfeio_get_setting('module_version');
 
         // A versão do módulo precisa ser inserida no tabela do banco de dados, porque ela não existia no banco de dados até agora.
         if (!$previous_version) {
@@ -103,7 +103,7 @@ if (!function_exists('gofasnfeio_config')) {
         // e a "Exclusivamente na versão 1.4.0 será realizada a migração da RPS do módulo para a NFE."
         // Verifica se a versão dos arquivos do módulo corresponde a versão do módulo no banco de dados.
         if ($module_version_int >= 140 && $module_version_int < 150 && $previous_version_int >= 140 && $previous_version_int < 150) {
-            $nfe_rps = gnfe_get_nfes()['rpsNumber'];
+            $nfe_rps = nfeio_get_last_nfe()['rpsNumber'];
 
             // Verifica se a configuração rps_number existe no banco de dados.
             if (Capsule::table('tbladdonmodules')->where('setting','=','rps_number')->count() == 0) {
@@ -112,15 +112,15 @@ if (!function_exists('gofasnfeio_config')) {
                 } catch (\Throwable $th) {}
             }
 
-            $whmcs_rps = gnfe_config('rps_number');
+            $whmcs_rps = nfeio_get_setting('rps_number');
 
             if (is_numeric($whmcs_rps) || $whmcs_rps == '') {
-                $company_data = gnfe_get_company_info();
+                $company_data = nfeio_get_company_info();
 
                 if (isset($company_data['error'])) {
-                    logModuleCall('gofas_nfeio', 'gnfe_get_company_info', '', $company_data['error'], '', '');
+                    logModuleCall('gofas_nfeio', 'nfeio_get_company_info', '', $company_data['error'], '', '');
                 } else {
-                    gnfe_put_rps($company_data, $whmcs_rps); // Transfere a tratativa do RPS para a NFe.
+                    nfeio_transfer_rps_number_handling($company_data, $whmcs_rps); // Transfere a tratativa do RPS para a NFe.
                 }
             }
         }
@@ -149,8 +149,8 @@ if (!function_exists('gofasnfeio_config')) {
                 $gnfewhmcsurl = $gnfewhmcsurl_->value;
                 $gnfewhmcsurl_created_at = $gnfewhmcsurl_->created_at;
             }
-            foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'gnfe_email_nfe')->get(['value']) as $gnfe_email_nfe_) {
-                $gnfe_email_nfe = $gnfewhmcsurl_->value;
+            foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'nfeio_email_nfe')->get(['value']) as $gnfe_email_nfe_) {
+                $nfeio_email_nfe = $gnfewhmcsurl_->value;
             }
 
             foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'gnfewhmcsadminurl')->get(['value', 'created_at']) as $gnfewhmcsadminurl_) {
@@ -161,9 +161,9 @@ if (!function_exists('gofasnfeio_config')) {
                 $gnfewhmcsadminpath = $gnfewhmcsadminpath_->value;
                 $gnfewhmcsadminpath_created_at = $gnfewhmcsurl_->created_at;
             }
-            if (!$gnfe_email_nfe) {
+            if (!$nfeio_email_nfe) {
                 try {
-                    Capsule::table('tblconfiguration')->insert(['setting' => 'gnfe_email_nfe', 'value' => 'Active', 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
+                    Capsule::table('tblconfiguration')->insert(['setting' => 'nfeio_email_nfe', 'value' => 'Active', 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
                 } catch (\Exception $e) {
                     $e->getMessage();
                 }
@@ -245,7 +245,7 @@ if (!function_exists('gofasnfeio_config')) {
         ]];
 
         try {
-            Capsule::table('tbladdonmodules')->where('module', 'gofasnfeio')->where('setting', 'rps_serial_number')->update(['value' => gnfe_get_company_info()['rpsSerialNumber']]);
+            Capsule::table('tbladdonmodules')->where('module', 'gofasnfeio')->where('setting', 'rps_serial_number')->update(['value' => nfeio_get_company_info()['rpsSerialNumber']]);
         } catch (\Throwable $th) {}
         $rps_serial_number = ['rps_serial_number' => [
             'FriendlyName' => 'Série do RPS',
@@ -254,12 +254,12 @@ if (!function_exists('gofasnfeio_config')) {
             'Description' => '<a style="text-decoration:underline;" href="https://nfe.io/docs/nota-fiscal-servico/conceitos-nfs-e/" target="_blank">Saiba mais</a>',
         ]];
 
-        $rps_number = gnfe_config()['rps_number'];
+        $rps_number = nfeio_get_setting()['rps_number'];
 
         if (is_numeric($rps_number)) {
             $rps_number_camp_description = 'RPS atualizada de acordo com última nota fiscal emitida, clique no botão salvar alterações para atualizar automaticamente.';
         } else {
-            $rps_number_camp_description = '<a style="text-decoration:underline;" href="https://app.nfe.io/companies/edit/fiscal/' . gnfe_config('company_id') . '" target="_blank">Consultar RPS</a>';
+            $rps_number_camp_description = '<a style="text-decoration:underline;" href="https://app.nfe.io/companies/edit/fiscal/' . nfeio_get_setting('company_id') . '" target="_blank">Consultar RPS</a>';
         }
 
         $rps_number_camp = ['rps_number' => [
@@ -307,21 +307,21 @@ if (!function_exists('gofasnfeio_config')) {
         $insc_municipal = ['insc_municipal' => [
             'FriendlyName' => 'Inscrição Municipal',
             'Type' => 'dropdown',
-            'Options' => gnfe_customfields_dropdow('Insc_municipal'),
+            'Options' => nfeio_get_custom_fields_dropdown(),
             'Description' => 'Escolha o campo personalizado de Inscrição Municipal',
         ]];
 
         $cpf = ['cpf_camp' => [
             'FriendlyName' => 'CPF ',
             'Type' => 'dropdown',
-            'Options' => gnfe_customfields_dropdow('Cpf'),
+            'Options' => nfeio_get_custom_fields_dropdown(),
             'Description' => 'Escolha o campo personalizado do CPF',
         ]];
 
         $cnpj = ['cnpj_camp' => [
             'FriendlyName' => 'CNPJ',
             'Type' => 'dropdown',
-            'Options' => gnfe_customfields_dropdow('Cnpj'),
+            'Options' => nfeio_get_custom_fields_dropdown(),
             'Description' => 'Escolha o campo personalizado do CNPJ', ]];
 
         $tax = ['tax' => [

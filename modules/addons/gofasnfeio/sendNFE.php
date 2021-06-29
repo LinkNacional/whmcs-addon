@@ -9,7 +9,7 @@ function emitNFE($invoices,$nfeio) {
     $invoice = localAPI('GetInvoice', ['invoiceid' => $invoices->id], false);
     $client = localAPI('GetClientsDetails', ['clientid' => $invoices->userid], false);
 
-    $params = gnfe_config();
+    $params = nfeio_get_setting();
 
     //create second option from description nfe
     foreach ($invoice['items']['item'] as $value) {
@@ -17,8 +17,8 @@ function emitNFE($invoices,$nfeio) {
     }
 
     //  CPF/CNPJ/NAME
-    $customer = gnfe_customer($invoices->userid, $client);
-    logModuleCall('gofas_nfeio', 'gnfe_customer', $customer, '','', '');
+    $customer = nfeio_get_customer($invoices->userid, $client);
+    logModuleCall('gofas_nfeio', 'nfeio_get_customer', $customer, '','', '');
 
     if ($customer['doc_type'] == 2) {
         if ($client['companyname'] != '') {
@@ -78,9 +78,9 @@ function emitNFE($invoices,$nfeio) {
     }
 
     logModuleCall('gofas_nfeio', 'sendNFE - customer', $customer, '','', '');
-    $code = gnfe_ibge(preg_replace('/[^0-9]/', '', $client['postcode']));
+    $code = nfeio_get_city_postal_code(preg_replace('/[^0-9]/', '', $client['postcode']));
     if ($code == 'ERROR') {
-        logModuleCall('gofas_nfeio', 'sendNFE - gnfe_ibge', $customer, '','ERROR', '');
+        logModuleCall('gofas_nfeio', 'sendNFE - nfeio_get_city_postal_code', $customer, '','ERROR', '');
         update_status_nfe($nfeio->invoice_id,'Error_cep');
     } else {
         //cria o array do request
@@ -89,7 +89,7 @@ function emitNFE($invoices,$nfeio) {
         $code,$client['city'],$client['state']);
 
         //envia o requisição
-        $nfe = gnfe_issue_nfe($postfields);
+        $nfe = nfeio_issue_nfe($postfields);
 
         if ($nfe->message) {
             logModuleCall('gofas_nfeio', 'sendNFE', $postfields, $nfe, 'ERROR', '');
@@ -117,7 +117,7 @@ $name,$email,$countrycode,$postcode,$street,$number,$address2,$code,$city,$state
             'name' => $name,
             'email' => $email,
             'address' => [
-                'country' => gnfe_country_code($countrycode),
+                'country' => nfeio_country_code($countrycode),
                 'postalCode' => preg_replace('/[^0-9]/', '', $postcode),
                 'street' => $street,
                 'number' => $number,

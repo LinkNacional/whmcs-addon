@@ -3,7 +3,7 @@
 if (!defined('WHMCS')) {
     exit();
 }
-$params = gnfe_config();
+$params = nfeio_get_setting();
 $issueInvoiceCondition = gnfe_get_client_issue_invoice_cond_from_invoice_id($vars['invoiceid']);
 
 // Uma fatura é paga
@@ -20,10 +20,10 @@ if ($issueInvoiceCondition === 'quando a fatura é paga') {
                 $line_items[] = $value['description']; //substr( $value['description'],  0, 100);
             }
 
-            $queue = gnfe_queue_nfe($vars['invoiceid'], true);
+            $queue = nfeio_queue_nfe($vars['invoiceid'], true);
             if ($queue != 'success') {
                 if ($vars['source'] === 'adminarea') {
-                    header('Location: ' . gnfe_whmcs_admin_url() . 'invoices.php?action=edit&id=' . $vars['invoiceid'] . '&gnfe_error=Erro ao criar nota fiscal: ' . $queue);
+                    header('Location: ' . nfeio_get_whmcs_admin_url() . 'invoices.php?action=edit&id=' . $vars['invoiceid'] . '&gnfe_error=Erro ao criar nota fiscal: ' . $queue);
                     exit;
                 }
             } else {
@@ -47,11 +47,11 @@ if ($issueInvoiceCondition === 'quando a fatura é paga') {
                     $line_items[] = $value['description']; //substr( $value['description'],  0, 100);
                 }
 
-                $queue = gnfe_queue_nfe($vars['invoiceid'], true);
+                $queue = nfeio_queue_nfe($vars['invoiceid'], true);
                 if ($queue != 'success') {
                     logModuleCall('gofas_nfeio', 'invoicepaid', $vars['invoiceid'], $queue, 'ERROR', '');
                     if ($vars['source'] === 'adminarea') {
-                        header('Location: ' . gnfe_whmcs_admin_url() . 'invoices.php?action=edit&id=' . $vars['invoiceid'] . '&gnfe_error=Erro ao criar nota fiscal: ' . $queue);
+                        header('Location: ' . nfeio_get_whmcs_admin_url() . 'invoices.php?action=edit&id=' . $vars['invoiceid'] . '&gnfe_error=Erro ao criar nota fiscal: ' . $queue);
                         exit;
                     }
                 } else {
