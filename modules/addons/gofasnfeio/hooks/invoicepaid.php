@@ -11,7 +11,7 @@ if ($issueInvoiceCondition === 'quando a fatura é paga') {
     $invoice = localAPI('GetInvoice', ['invoiceid' => $vars['invoiceid']], false);
 
     if ((float) $invoice['total'] > 0.00 and $invoice['status'] != 'Draft') {
-        $nfe_for_invoice = gnfe_get_local_nfe($vars['invoiceid'], ['id']);
+        $nfe_for_invoice = nfeio_get_local_nfe($vars['invoiceid'], ['id']);
 
         if (!$nfe_for_invoice['id']) {
             $client = localAPI('GetClientsDetails', ['clientid' => $invoice['userid'], 'stats' => false], false);
@@ -38,7 +38,7 @@ if ($issueInvoiceCondition === 'quando a fatura é paga') {
         $invoice = localAPI('GetInvoice', ['invoiceid' => $vars['invoiceid']], false);
 
         if ((float) $invoice['total'] > 0.00 and $invoice['status'] != 'Draft') {
-            $nfe_for_invoice = gnfe_get_local_nfe($vars['invoiceid'], ['id']);
+            $nfe_for_invoice = nfeio_get_local_nfe($vars['invoiceid'], ['id']);
 
             if (!$nfe_for_invoice['id']) {
                 $client = localAPI('GetClientsDetails', ['clientid' => $invoice['userid'], 'stats' => false], false);

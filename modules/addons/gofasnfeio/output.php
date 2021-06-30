@@ -201,7 +201,7 @@ if (!function_exists('gofasnfeio_output')) {
         if ($_REQUEST['gnfe_create']) {
             $invoice = localAPI('GetInvoice', ['invoiceid' => $_REQUEST['invoice_id']], false);
             $client = localAPI('GetClientsDetails', ['clientid' => $invoice['userid'], 'stats' => false], false);
-            $nfe_for_invoice = gnfe_get_local_nfe($_REQUEST['invoice_id'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at', 'rpsSerialNumber']);
+            $nfe_for_invoice = nfeio_get_local_nfe($_REQUEST['invoice_id'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at', 'rpsSerialNumber']);
             if (!$nfe_for_invoice['id']) {
                 $queue = nfeio_queue_nfe($_REQUEST['invoice_id'], true);
                 if ($queue !== 'success') {
@@ -231,7 +231,7 @@ if (!function_exists('gofasnfeio_output')) {
         if ($_REQUEST['gnfe_cancel']) {
             $delete_nfe = nfeio_delete_nfe($_REQUEST['gnfe_cancel']);
             if (!$delete_nfe->message) {
-                $gnfe_update_nfe = gnfe_update_nfe((object) ['id' => $_REQUEST['gnfe_cancel'], 'status' => 'Cancelled', 'servicesAmount' => $_REQUEST['services_amount'], 'environment' => $_REQUEST['environment'], 'flow_status' => $_REQUEST['flow_status']], $_REQUEST['user_id'], $_REQUEST['invoice_id'], 'n/a', $_REQUEST['created_at'], date('Y-m-d H:i:s'));
+                $nfeio_update_nfe = nfeio_update_nfe((object) ['id' => $_REQUEST['gnfe_cancel'], 'status' => 'Cancelled', 'servicesAmount' => $_REQUEST['services_amount'], 'environment' => $_REQUEST['environment'], 'flow_status' => $_REQUEST['flow_status']], $_REQUEST['user_id'], $_REQUEST['invoice_id'], 'n/a', $_REQUEST['created_at'], date('Y-m-d H:i:s'));
                 $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Nota fiscal cancelada com sucesso</div>';
                 header_remove();
                 header('Location: ' . $gnfewhmcsadminurl . 'addonmodules.php?module=gofasnfeio&gnfe_message=' . base64_encode(urlencode($message)));

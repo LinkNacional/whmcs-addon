@@ -288,7 +288,7 @@ if (!function_exists('nfeio_queue_nfe')) {
                 'rpsSerialNumber' => 'waiting',
                 'service_code' => $item['code_service'],
             ];
-            $nfe_for_invoice = gnfe_get_local_nfe($invoice_id, ['status']);
+            $nfe_for_invoice = nfeio_get_local_nfe($invoice_id, ['status']);
 
             if (!$nfe_for_invoice['status'] || $create_all) {
                 $create_all = true;
@@ -335,7 +335,7 @@ if (!function_exists('gnfe_queue_nfe_edit')) {
                 'service_code' => $item['code_service'],
             ];
 
-            $nfe_for_invoice = gnfe_get_local_nfe($invoice_id, ['status']);
+            $nfe_for_invoice = nfeio_get_local_nfe($invoice_id, ['status']);
 
             if ((string) $nfe_for_invoice['status'] === (string) 'Cancelled' or (string) $nfe_for_invoice['status'] === (string) 'Error') {
                 try {
@@ -366,7 +366,7 @@ if (!function_exists('nfeio_issue_nfe')) {
         }
 
         if ($gnfe_webhook_id) {
-            $check_webhook = gnfe_check_webhook($gnfe_webhook_id);
+            $check_webhook = nfeio_check_webhook($gnfe_webhook_id);
             $error = '';
             if ($check_webhook['message']) {
                 logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - check_webhook', $gnfe_webhook_id, $check_webhook['message'], 'ERROR', '');
@@ -570,11 +570,6 @@ if (!function_exists('nfeio_test_connection')) {
     }
 }
 
-/**
- * Pega o JSON da última nota fiscal emitida do banco de dados da NFe.
- *
- * @return array;
- */
 if (!function_exists('nfeio_get_last_nfe')) {
     /**
      * Returns the JSON of the latest issued NFe.
@@ -822,11 +817,19 @@ if (!function_exists('gnfe_save_nfe')) {
 }
 */
 
-if (!function_exists('gnfe_update_nfe')) {
+if (!function_exists('nfeio_update_nfe')) {
     /**
-     * 
+     * Updates the data of a NFe inside the WHMCS.
+     *
+     * @param object $nfe
+     * @param string $user_id
+     * @param string $invoice_id
+     * @param string $pdf
+     * @param string $created_at
+     * @param string $updated_at
+     * @param string|bool $id_gofasnfeio = false
      */
-    function gnfe_update_nfe($nfe, $user_id, $invoice_id, $pdf, $created_at, $updated_at, $id_gofasnfeio = false) {
+    function nfeio_update_nfe($nfe, $user_id, $invoice_id, $pdf, $created_at, $updated_at, $id_gofasnfeio = false) {
         $data = [
             'invoice_id' => $invoice_id,
             'user_id' => $user_id,
@@ -859,14 +862,16 @@ if (!function_exists('gnfe_update_nfe')) {
     }
 }
 
-/**
- * Returns the data of a invoice from the local WHMCS database.
- * @var $invoice_id
- * @var $values
- * @return string
- */
-if (!function_exists('gnfe_get_local_nfe')) {
-    function gnfe_get_local_nfe($invoice_id, $values) {
+if (!function_exists('nfeio_get_local_nfe')) {
+    /**
+    * Returns the data of a NFe from the local WHMCS database according with an invoice id
+    .
+    * @param string $invoice_id
+    * @param string $values
+
+    * @return string
+    */
+    function nfeio_get_local_nfe($invoice_id, $values) {
         foreach (Capsule::table('gofasnfeio')->where('invoice_id', '=', $invoice_id)->orderBy('id', 'desc')->get($values) as $key => $value) {
             $nfe_for_invoice[$key] = json_decode(json_encode($value), true);
         }
@@ -874,19 +879,32 @@ if (!function_exists('gnfe_get_local_nfe')) {
     }
 }
 
-if (!function_exists('gnfe_check_webhook')) {
-    function gnfe_check_webhook($id) {
+if (!function_exists('nfeio_check_webhook')) {
+    /**
+     * Checks the connection to the NFe webhook.
+     *
+     * @param string $id
+     * @return array
+     */
+    function nfeio_check_webhook($id) {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/hooks/' . $id);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.nfe.io/v1/hooks/' . $id,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: text/json',
+                'Accept: application/json',
+                'Authorization: ' . nfeio_get_setting('api_key')
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_RETURNTRANSFER => true
+        ]);
         $response = curl_exec($curl);
         curl_close($curl);
 
-        return json_decode(json_encode(json_decode($response)), true);
+        return json_decode($response, true);
     }
 }
+
 if (!function_exists('gnfe_create_webhook')) {
     function gnfe_create_webhook($url) {
         try {

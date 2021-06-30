@@ -6,7 +6,7 @@ if (!defined('WHMCS')) {
 use WHMCS\Database\Capsule;
 
 $params = nfeio_get_setting();
-$nfe_for_invoice = gnfe_get_local_nfe($vars['invoiceid'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at']);
+$nfe_for_invoice = nfeio_get_local_nfe($vars['invoiceid'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at']);
 $invoice = localAPI('GetInvoice', ['invoiceid' => $vars['invoiceid']], false);
 $client = localAPI('GetClientsDetails', ['clientid' => $vars['userid'], 'stats' => false], false);
 
@@ -59,7 +59,7 @@ if ($_REQUEST['gnfe_cancel']) {
     }
     if (!$delete_nfe->message) {
         logModuleCall('gofas_nfeio', 'admininvoicecontorloutput - gnfe_cancel',$nfe->nfe_id, $delete_nfe, 'OK', '');
-        $gnfe_update_nfe = gnfe_update_nfe((object) ['id' => $nfe_for_invoice['nfe_id'], 'status' => 'Cancelled', 'servicesAmount' => $nfe_for_invoice['services_amount'], 'environment' => $nfe_for_invoice['environment'], 'flow_status' => $nfe_for_invoice['flow_status']], $nfe_for_invoice['user_id'], $vars['invoiceid'], 'n/a', $nfe_for_invoice['created_at'], date('Y-m-d H:i:s'));
+        $nfeio_update_nfe = nfeio_update_nfe((object) ['id' => $nfe_for_invoice['nfe_id'], 'status' => 'Cancelled', 'servicesAmount' => $nfe_for_invoice['services_amount'], 'environment' => $nfe_for_invoice['environment'], 'flow_status' => $nfe_for_invoice['flow_status']], $nfe_for_invoice['user_id'], $vars['invoiceid'], 'n/a', $nfe_for_invoice['created_at'], date('Y-m-d H:i:s'));
         $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Nota Fiscal Cancelada com Sucesso</div>';
         header_remove();
         header('Location: ' . $gnfewhmcsadminurl . 'invoices.php?action=edit&id=' . $vars['invoiceid'] . '&gnfe_message=' . base64_encode(urlencode($message)));

@@ -11,7 +11,7 @@ if ($issueInvoiceCondition === 'quando a fatura é gerada') {
     $invoice = localAPI('GetInvoice', ['invoiceid' => $vars['invoiceid']], false);
 
     if ((float) $invoice['total'] > (float) '0.00' and $invoice['status'] != 'Draft') {
-        $nfe_for_invoice = gnfe_get_local_nfe($vars['invoiceid'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at']);
+        $nfe_for_invoice = nfeio_get_local_nfe($vars['invoiceid'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at']);
 
         if (!$nfe_for_invoice['id']) {
             $client = localAPI('GetClientsDetails', ['clientid' => $invoice['userid'], 'stats' => false], false);
@@ -43,7 +43,7 @@ if ($issueInvoiceCondition === 'quando a fatura é gerada') {
         $invoice = localAPI('GetInvoice', ['invoiceid' => $vars['invoiceid']], false);
 
         if ((float) $invoice['total'] > (float) '0.00' and $invoice['status'] != 'Draft') {
-            $nfe_for_invoice = gnfe_get_local_nfe($vars['invoiceid'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at']);
+            $nfe_for_invoice = nfeio_get_local_nfe($vars['invoiceid'], ['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'pdf', 'created_at']);
 
             if (!$nfe_for_invoice['id']) {
                 $client = localAPI('GetClientsDetails', ['clientid' => $invoice['userid'], 'stats' => false], false);
