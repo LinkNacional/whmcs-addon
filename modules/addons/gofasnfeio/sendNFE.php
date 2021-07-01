@@ -18,7 +18,7 @@ function emitNFE($invoices,$nfeio) {
 
     //  CPF/CNPJ/NAME
     $customer = nfeio_get_customer($invoices->userid, $client);
-    logModuleCall('gofas_nfeio', 'nfeio_get_customer', $customer, '','', '');
+    nfeio_log('nfeio', 'nfeio_get_customer', $customer, '','', '');
 
     if ($customer['doc_type'] == 2) {
         if ($client['companyname'] != '') {
@@ -42,24 +42,22 @@ function emitNFE($invoices,$nfeio) {
         if ($params['send_invoice_url'] === 'Sim') {
             $desc .= $gnfeWhmcsUrl . 'viewinvoice.php?id=' . $invoices->id;
         }
-        $desc .= ' ' . $params['descCustom'];
-
-        $gnfeWhmcsUrl = Capsule::table('tblconfiguration')->where('setting', '=', 'Domain')->get(['value'])[0]->value;
+        $desc .= ' ' . $params['custom_invoice_descri'];
 
     } elseif ($params['InvoiceDetails'] == 'Nome dos serviços') {
-        $desc = substr(implode("\n", $line_items), 0, 600) . ' ' . $params['descCustom'];
+        $desc = substr(implode("\n", $line_items), 0, 600) . ' ' . $params['custom_invoice_descri'];
     } elseif ($params['InvoiceDetails'] == 'Número da fatura + Nome dos serviços') {
         $gnfeWhmcsUrl = Capsule::table('tblconfiguration')->where('setting', '=', 'Domain')->get(['value'])[0]->value;
         $desc = 'Nota referente a fatura #' . $invoices->id . '  ';
         if ($params['send_invoice_url'] === 'Sim') {
             $desc .= $gnfeWhmcsUrl . 'viewinvoice.php?id=' . $invoices->id;
         }
-        $desc .= ' | ' . substr(implode("\n", $line_items), 0, 600) . ' '. $params['descCustom'];
+        $desc .= ' | ' . substr(implode("\n", $line_items), 0, 600) . ' '. $params['custom_invoice_descri'];
     }
 
-    logModuleCall('gofas_nfeio', 'description-descCustom', $params['descCustom'], '','', '');
-    logModuleCall('gofas_nfeio', 'description-InvoiceDetails', $params['InvoiceDetails'], '','', '');
-    logModuleCall('gofas_nfeio', 'description', $params, '','', '');
+    nfeio_log('nfeio', 'description-custom_invoice_descri', $params['custom_invoice_descri'], '','', '');
+    nfeio_log('nfeio', 'description-InvoiceDetails', $params['InvoiceDetails'], '','', '');
+    nfeio_log('nfeio', 'description', $params, '','', '');
 
     //define address
     if (strpos($client['address1'], ',')) {
@@ -71,20 +69,20 @@ function emitNFE($invoices,$nfeio) {
         $number = preg_replace('/[^0-9]/', '', $client['address1']);
     }
 
-    if ($params['gnfe_email_nfe_config'] == 'on') {
+    if ($params['email_nfe_config'] == 'on') {
         $client_email = $client['email'];
     } else {
         $client_email = '';
     }
 
-    logModuleCall('gofas_nfeio', 'sendNFE - customer', $customer, '','', '');
+    nfeio_log('nfeio', 'sendNFE - customer', $customer, '','', '');
     $code = nfeio_get_city_postal_code(preg_replace('/[^0-9]/', '', $client['postcode']));
     if ($code == 'ERROR') {
-        logModuleCall('gofas_nfeio', 'sendNFE - nfeio_get_city_postal_code', $customer, '','ERROR', '');
+        nfeio_log('nfeio', 'sendNFE - nfeio_get_city_postal_code', $customer, '','ERROR', '');
         nfeio_update_nfe_status($nfeio->invoice_id,'Error_cep');
     } else {
         //cria o array do request
-        $postfields = createRequestFromAPI($service_code,$desc,$nfeio->services_amount,$customer['document'],$customer['insc_municipal'],
+        $postfields = createRequestFromAPI($service_code,$desc,$nfeio->services_amount,$customer['document'],$customer['municipal_inscri'],
         $name,$client_email,$client['countrycode'],$client['postcode'],$street,$number,$client['address2'],
         $code,$client['city'],$client['state']);
 
@@ -92,20 +90,20 @@ function emitNFE($invoices,$nfeio) {
         $nfe = nfeio_issue_nfe($postfields);
 
         if ($nfe->message) {
-            logModuleCall('gofas_nfeio', 'sendNFE', $postfields, $nfe, 'ERROR', '');
+            nfeio_log('nfeio', 'sendNFE', $postfields, $nfe, 'ERROR', '');
         }
         if (!$nfe->message) {
-            logModuleCall('gofas_nfeio', 'sendNFE', $postfields, $nfe, 'OK', '');
+            nfeio_log('nfeio', 'sendNFE', $postfields, $nfe, 'OK', '');
             $nfeio_update_nfe = nfeio_update_nfe($nfe, $invoices->userid, $invoices->id, 'n/a', date('Y-m-d H:i:s'), date('Y-m-d H:i:s'), $waiting->id);
 
             if ($nfeio_update_nfe && $nfeio_update_nfe !== 'success') {
-                logModuleCall('gofas_nfeio', 'sendNFE - nfeio_update_nfe', [$nfe, $invoices->userid, $invoices->id, 'n/a', date('Y-m-d H:i:s'), date('Y-m-d H:i:s'), $waiting->id], $nfeio_update_nfe, 'ERROR', '');
+                nfeio_log('nfeio', 'sendNFE - nfeio_update_nfe', [$nfe, $invoices->userid, $invoices->id, 'n/a', date('Y-m-d H:i:s'), date('Y-m-d H:i:s'), $waiting->id], $nfeio_update_nfe, 'ERROR', '');
             }
         }
     }
 }
 
-function createRequestFromAPI($service_code,$desc,$services_amount,$document,$insc_municipal = '',
+function createRequestFromAPI($service_code,$desc,$services_amount,$document,$municipal_inscri = '',
 $name,$email,$countrycode,$postcode,$street,$number,$address2,$code,$city,$state) {
     $postfields = [
         'cityServiceCode' => $service_code,
@@ -113,7 +111,7 @@ $name,$email,$countrycode,$postcode,$street,$number,$address2,$code,$city,$state
         'servicesAmount' => $services_amount,
         'borrower' => [
             'federalTaxNumber' => $document,
-            'municipalTaxNumber' => $insc_municipal,
+            'municipalTaxNumber' => $municipal_inscri,
             'name' => $name,
             'email' => $email,
             'address' => [
@@ -131,6 +129,6 @@ $name,$email,$countrycode,$postcode,$street,$number,$address2,$code,$city,$state
             ]
         ]
     ];
-    strlen($insc_municipal) == 0 ? '' : $postfields['borrower']['municipalTaxNumber'] = $insc_municipal;
+    strlen($municipal_inscri) == 0 ? '' : $postfields['borrower']['municipalTaxNumber'] = $municipal_inscri;
     return $postfields;
 }

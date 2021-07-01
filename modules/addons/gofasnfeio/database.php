@@ -1,20 +1,16 @@
 <?php
-if (!defined('WHMCS')) {
-    exit();
-}
+
+defined('WHMCS') or exit;
 
 use WHMCS\Database\Capsule;
 
-//===================================================================================
-//                      CREATE TABLES
-if (!function_exists('gnfe_verifyInstall')) {
-    function gnfe_verifyInstall() {
-        if (!Capsule::schema()->hasTable('gofasnfeio')) {
+if (!function_exists('nfeio_create_tables')) {
+    function nfeio_create_tables() {
+        $error = null;
+        if (!Capsule::schema()->hasTable('nfeio')) {
             try {
-                Capsule::schema()->create('gofasnfeio', function ($table) {
-                    // incremented id
+                Capsule::schema()->create('nfeio', function ($table) {
                     $table->increments('id');
-                    // whmcs info
                     $table->string('invoice_id');
                     $table->string('user_id');
                     $table->string('nfe_id');
@@ -48,7 +44,6 @@ if (!function_exists('gnfe_verifyInstall')) {
             }
         }
 
-        // Added in v1.1.3
         if (!Capsule::schema()->hasColumn('gofasnfeio', 'rpsNumber')) {
             try {
                 Capsule::schema()->table('gofasnfeio', function ($table) {
@@ -77,13 +72,16 @@ if (!function_exists('create_table_product_code')) {
         $pdo->beginTransaction();
 
         try {
-            $statement = $pdo->prepare('CREATE TABLE tblproductcode (
-                    id int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                    product_id int(10) NOT NULL,
-                    code_service int(10) NOT NULL,
-                    create_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    update_at TIMESTAMP NULL,
-                    ID_user int(10) NOT NULL)');
+            $statement = $pdo->prepare(
+                'CREATE TABLE tblproductcode (
+                        id int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        product_id int(10) NOT NULL,
+                        code_service int(10) NOT NULL,
+                        create_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        update_at TIMESTAMP NULL,
+                        ID_user int(10) NOT NULL
+                    )'
+                );
             $statement->execute();
             $pdo->commit();
         } catch (\Exception $e) {
@@ -91,7 +89,6 @@ if (!function_exists('create_table_product_code')) {
         }
     }
 }
-//===================================================================================
 
 if (!function_exists('set_code_service_camp_gofasnfeio')) {
     function set_code_service_camp_gofasnfeio() {
@@ -129,8 +126,18 @@ if (!function_exists('set_custom_field_ini_date')) {
         $dataAtual = toMySQLDate($data);
 
         try {
-            if (Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->where('setting', '=', 'initial_date')->count() < 1) {
-                Capsule::table('tbladdonmodules')->insert(['module' => 'gofasnfeio', 'setting' => 'initial_date', 'value' => $dataAtual]);
+            if (
+                Capsule::table('tbladdonmodules')
+                    ->where('module', '=', 'gofasnfeio')
+                    ->where('setting', '=', 'initial_date')
+                    ->count() < 1
+            ) {
+                Capsule::table('tbladdonmodules')
+                ->insert([
+                    'module' => 'gofasnfeio',
+                    'setting' => 'initial_date',
+                    'value' => $dataAtual
+                ]);
             }
         } catch (\Exception $e) {
             $e->getMessage();

@@ -9,9 +9,9 @@ if ($post) {
     $params = nfeio_get_setting();
 
     //verificar o ambiente
-    if ($params['NFEioEnvironment'] == 'on' && $post['environment'] == 'Production') {
+    if ($params['development_env'] == 'on' && $post['environment'] == 'Production') {
         return '';
-    } elseif ($params['NFEioEnvironment'] == '' && $post['environment'] == 'Development') {
+    } elseif ($params['development_env'] == '' && $post['environment'] == 'Development') {
         return '';
     }
     //fim verificar o ambiente
@@ -55,8 +55,8 @@ if ($post) {
     $invoice_id = Capsule::table('gofasnfeio')->where('nfe_id', '=', $post['id'])->get(['invoice_id'])[0];
 
     if ($post['status'] == 'Error') {
-        logModuleCall('gofas_nfeio', 'callback', '', $post, 'ERROR', '');
+        nfeio_log('nfeio', 'callback', '', $post, 'ERROR', '');
     } else {
-        logModuleCall('gofas_nfeio', 'callback', '', $post, 'OK', '');
+        nfeio_log('nfeio', 'callback', '', $post, 'OK', '');
     }
 }
