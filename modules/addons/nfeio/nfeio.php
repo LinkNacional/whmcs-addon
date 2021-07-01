@@ -4,7 +4,7 @@ defined('WHMCS') or exit;
 
 require_once __DIR__ . './functions.php';
 require_once __DIR__ . '/output.php';
-require_once __DIR__ './database.php';
+require_once __DIR__ . './database.php';
 
 /**
  * Shows the module setting fields.
