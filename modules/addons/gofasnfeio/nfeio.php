@@ -157,13 +157,18 @@ function nfeio_config() {
  * Performed when the module is activated.
  * Creates the tables in the database.
  */
-function nfeio_activate() {}
+function nfeio_activate() {
+    set_nfeio_admin_url();
+    nfeio_create_tables();
+}
 
 /**
  * Performed when teh module is deactivated.
  * Undo all actions done in nfeio_config()
  */
-function nfeio_deactivate() {}
+function nfeio_deactivate() {
+    // TODO
+}
 
 /**
  * Called the first time the module is accessed following an update.

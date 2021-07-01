@@ -5,8 +5,10 @@ defined('WHMCS') or exit;
 use WHMCS\Database\Capsule;
 
 if (!function_exists('nfeio_create_tables')) {
+    /**
+     * nfeio, mod_nfeio_custom_configs
+     */
     function nfeio_create_tables() {
-        $error = null;
         if (!Capsule::schema()->hasTable('nfeio')) {
             try {
                 Capsule::schema()->create('nfeio', function ($table) {
@@ -27,7 +29,7 @@ if (!function_exists('nfeio_create_tables')) {
                     $table->string('tics')->nullable(true);
                 });
             } catch (\Exception $e) {
-                $error .= "Não foi possível criar a tabela do módulo no banco de dados: {$e->getMessage()}";
+                nfeio_log('nfeio', 'nfeio_create_tables: nfeio', '', $e->getMessage(), '');
             }
         }
 
@@ -40,81 +42,29 @@ if (!function_exists('nfeio_create_tables')) {
                     $table->string('value');
                 });
             } catch (\Exception $e) {
-                $error .= "Não foi possível atualizar a tabela do módulo no banco de dados: {$e->getMessage()}";
+                nfeio_log('nfeio', 'nfeio_create_tables: mod_nfeio_custom_configs', '', $e->getMessage(), '');
             }
         }
 
-        if (!Capsule::schema()->hasColumn('gofasnfeio', 'rpsNumber')) {
+        if (!Capsule::schema()->hasTable('tblproductcode')) {
             try {
-                Capsule::schema()->table('gofasnfeio', function ($table) {
-                    $table->string('rpsNumber');
-                });
-            } catch (\Exception $e) {
-                $error .= "Não foi possível atualizar a tabela do módulo no banco de dados: {$e->getMessage()}";
-            }
-        }
-        if (!$error) {
-            return ['sucess' => 1];
-        }
-        if ($error) {
-            return ['error' => $error];
-        }
-    }
-}
+                $pdo = Capsule::connection()->getPdo();
+                $pdo->beginTransaction();
 
-if (!function_exists('create_table_product_code')) {
-    function create_table_product_code() {
-        if (Capsule::schema()->hasTable('tblproductcode')) {
-            return '';
-        }
+                $statement = $pdo->prepare('CREATE TABLE tblproductcode (
+                            id int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                            product_id int(10) NOT NULL,
+                            code_service int(10) NOT NULL,
+                            create_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            update_at TIMESTAMP NULL,
+                            ID_user int(10) NOT NULL)'
+                        );
 
-        $pdo = Capsule::connection()->getPdo();
-        $pdo->beginTransaction();
-
-        try {
-            $statement = $pdo->prepare(
-                'CREATE TABLE tblproductcode (
-                        id int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                        product_id int(10) NOT NULL,
-                        code_service int(10) NOT NULL,
-                        create_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        update_at TIMESTAMP NULL,
-                        ID_user int(10) NOT NULL
-                    )'
-                );
-            $statement->execute();
-            $pdo->commit();
-        } catch (\Exception $e) {
-            $pdo->rollBack();
-        }
-    }
-}
-
-if (!function_exists('set_code_service_camp_gofasnfeio')) {
-    function set_code_service_camp_gofasnfeio() {
-        if (!Capsule::schema()->hasColumn('gofasnfeio', 'service_code')) {
-            $pdo = Capsule::connection()->getPdo();
-            $pdo->beginTransaction();
-
-            try {
-                $statement = $pdo->prepare('ALTER TABLE gofasnfeio ADD service_code TEXT;');
                 $statement->execute();
                 $pdo->commit();
             } catch (\Exception $e) {
+                nfeio_log('nfeio', 'nfeio_create_tables: tblproductcode', '', $e->getMessage(), '');
                 $pdo->rollBack();
-            }
-        }
-        if (!Capsule::schema()->hasColumn('gofasnfeio', 'services_amount')) {
-            if (!Capsule::schema()->hasColumn('gofasnfeio', 'services_amount')) {
-                $pdo = Capsule::connection()->getPdo();
-                $pdo->beginTransaction();
-                try {
-                    $statement = $pdo->prepare('ALTER TABLE gofasnfeio ADD services_amount DECIMAL(16,2)');
-                    $statement->execute();
-                    $pdo->commit();
-                } catch (\Exception $e) {
-                    $pdo->rollBack();
-                }
             }
         }
     }
@@ -140,7 +90,7 @@ if (!function_exists('set_custom_field_ini_date')) {
                 ]);
             }
         } catch (\Exception $e) {
-            $e->getMessage();
+            nfeio_log('nfeio', 'set_custom_field_ini_date: initial_date', '', $e->getMessage(), '');
         }
     }
 }

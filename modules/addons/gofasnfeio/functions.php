@@ -1064,6 +1064,7 @@ if (!function_exists('nfeio_save_client_issue_nfe_cond')) {
      *
      * @param string $clientId
      * @param string $newCond
+     * 
      * @return void|array
      */
     function nfeio_save_client_issue_nfe_cond($clientId, $newCond) {
