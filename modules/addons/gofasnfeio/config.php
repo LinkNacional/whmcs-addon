@@ -29,7 +29,7 @@ if (!function_exists('gofasnfeio_config')) {
 
     function gofasnfeio_config() {
         if ($_GET['doc_log']) {
-            dowload_doc_log();
+            nfeio_download_log();
         }
 
         gnfe_verifyInstall();
@@ -37,7 +37,7 @@ if (!function_exists('gofasnfeio_config')) {
         try {
             if (Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->where('setting', '=', 'issue_note_conditions')->count() == 0) {
                 try {
-                    gnfe_insert_issue_nfe_cond_in_database();
+                    nfeio_save_issue_nfe_conds();
                 } catch (\Throwable $th) {}
             }
         } catch (\Throwable $th) {}

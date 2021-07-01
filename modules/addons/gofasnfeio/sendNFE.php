@@ -81,7 +81,7 @@ function emitNFE($invoices,$nfeio) {
     $code = nfeio_get_city_postal_code(preg_replace('/[^0-9]/', '', $client['postcode']));
     if ($code == 'ERROR') {
         logModuleCall('gofas_nfeio', 'sendNFE - nfeio_get_city_postal_code', $customer, '','ERROR', '');
-        update_status_nfe($nfeio->invoice_id,'Error_cep');
+        nfeio_update_nfe_status($nfeio->invoice_id,'Error_cep');
     } else {
         //cria o array do request
         $postfields = createRequestFromAPI($service_code,$desc,$nfeio->services_amount,$customer['document'],$customer['insc_municipal'],

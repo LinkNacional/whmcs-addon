@@ -132,22 +132,6 @@ if (!function_exists('nfeio_get_customer')) {
     }
 }
 
-/*
-if (!function_exists('gnfe_customfields')) {
-    function gnfe_customfields() {
-        //Determine custom fields id
-        $customfields = [];
-        foreach (Capsule::table('tblcustomfields')->where('type', '=', 'client')->get(['fieldname', 'id']) as $customfield) {
-            $customfields[] = $customfield;
-            $customfield_id = $customfield->id;
-            $customfield_name = ' ' . strtolower($customfield->fieldname);
-        }
-
-        return $customfields;
-    }
-}
-*/
-
 if (!function_exists('nfeio_get_custom_fields_dropdown')) {
     /**
      * Returns a array containing the fields of the tblcustomfields
@@ -271,7 +255,7 @@ if (!function_exists('nfeio_queue_nfe')) {
      */
     function nfeio_queue_nfe($invoice_id, $create_all = false) {
         $invoice = localAPI('GetInvoice', ['invoiceid' => $invoice_id], false);
-        $itens = get_product_invoice($invoice_id);
+        $itens = nfeio_get_product_invoice($invoice_id);
 
         foreach ($itens as $item) {
             $data = [
@@ -313,44 +297,6 @@ if (!function_exists('nfeio_queue_nfe')) {
     }
 }
 
-/*
-if (!function_exists('gnfe_queue_nfe_edit')) {
-    function gnfe_queue_nfe_edit($invoice_id, $gofasnfeio_id) {
-        $invoice = localAPI('GetInvoice', ['invoiceid' => $invoice_id], false);
-        $itens = get_product_invoice($invoice_id);
-
-        foreach ($itens as $item) {
-            $data = [
-                'invoice_id' => $invoice_id,
-                'user_id' => $invoice['userid'],
-                'nfe_id' => 'waiting',
-                'status' => 'Waiting',
-                'services_amount' => $item['amount'],
-                'environment' => 'waiting',
-                'flow_status' => 'waiting',
-                'pdf' => 'waiting',
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => 'waiting',
-                'rpsSerialNumber' => 'waiting',
-                'service_code' => $item['code_service'],
-            ];
-
-            $nfe_for_invoice = nfeio_get_local_nfe($invoice_id, ['status']);
-
-            if ((string) $nfe_for_invoice['status'] === (string) 'Cancelled' or (string) $nfe_for_invoice['status'] === (string) 'Error') {
-                try {
-                    Capsule::table('gofasnfeio')->where('invoice_id', '=', $invoice_id)->where('id', '=', $gofasnfeio_id)->update($data);
-                } catch (\Exception $e) {
-                    return $e->getMessage();
-                }
-            }
-        }
-
-        return 'success';
-    }
-}
-*/
-
 if (!function_exists('nfeio_issue_nfe')) {
     /**
      * Sends a NFe to the NFe.io.
@@ -374,10 +320,10 @@ if (!function_exists('nfeio_issue_nfe')) {
         }
 
         if ($gnfe_webhook_id and (string) $check_webhook['hooks']['url'] !== (string) $webhook_url) {
-            $create_webhook = gnfe_create_webhook($webhook_url);
+            $create_webhook = nfeio_create_webhook($webhook_url);
 
             if ($create_webhook['message']) {
-                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - gnfe_create_webhook', $webhook_url, $create_webhook['message'], 'ERROR', '');
+                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - nfeio_create_webhook', $webhook_url, $create_webhook['message'], 'ERROR', '');
             }
 
             if ($create_webhook['hooks']['id']) {
@@ -388,17 +334,17 @@ if (!function_exists('nfeio_issue_nfe')) {
                 }
             }
 
-            $delete_webhook = gnfe_delete_webhook($gnfe_webhook_id);
+            $delete_webhook = nfeio_delete_webhook($gnfe_webhook_id);
 
             if ($delete_webhook['message']) {
-                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - gnfe_delete_webhook', $gnfe_webhook_id, $delete_webhook, 'ERROR', '');
+                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - nfeio_delete_webhook', $gnfe_webhook_id, $delete_webhook, 'ERROR', '');
             }
         }
         if (!$gnfe_webhook_id) {
-            $create_webhook = gnfe_create_webhook($webhook_url);
+            $create_webhook = nfeio_create_webhook($webhook_url);
 
             if ($create_webhook['message']) {
-                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - gnfe_create_webhook', $webhook_url, $create_webhook, 'ERROR', '');
+                logModuleCall('gofas_nfeio', 'nfeio_issue_nfe - nfeio_create_webhook', $webhook_url, $create_webhook, 'ERROR', '');
             }
 
             if ($create_webhook['hooks']['id']) {
@@ -438,22 +384,6 @@ if (!function_exists('nfeio_issue_nfe')) {
             : json_decode(json_encode(json_decode($response)));
     }
 }
-
-/*
-if (!function_exists('gnfe_get_nfe')) {
-    function gnfe_get_nfe($nf) {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nf);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $response = curl_exec($curl);
-        curl_close($curl);
-
-        return json_decode($response);
-    }
-}
-*/
 
 if (!function_exists('nfeio_get_company_info')) {
     /**
@@ -596,30 +526,6 @@ if (!function_exists('nfeio_get_last_nfe')) {
     }
 }
 
-/*
-if (!function_exists('gnfe_get_invoice_nfes')) {
-    function gnfe_get_invoice_nfes($invoice_id) {
-        $nfes = [];
-        // foreach( Capsule::table('tbladdonmodules') -> where( 'module', '=', 'gofasnfeio' ) -> get( array( 'setting', 'value') ) as $settings ) {
-        foreach (Capsule::table('gofasnfeio')->where('invoice_id', '=', $invoice_id)->get(['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'flow_status', 'pdf', 'created_at', 'updated_at', 'rpsSerialNumber', 'rpsNumber']) as $nfe) {
-            $nfes = $nfe;
-        }
-
-        $checkfields = json_decode(json_encode($nfes), true);
-
-        if (!$checkfields) {
-            $fieldArray = ['status' => 'error', 'message' => 'database error'];
-        } elseif (count($checkfields) >= 1) {
-            $fieldArray = ['status' => 'success', 'result' => $checkfields];
-        } else {
-            $fieldArray = ['status' => 'error', 'message' => 'nothing to show'];
-        }
-
-        return $fieldArray;
-    }
-}
-*/
-
 if (!function_exists('nfeio_delete_nfe')) {
     /**
      * Sends a DELETE request to the NFe.io in order to delete de NFe.
@@ -742,36 +648,6 @@ if (!function_exists('nfeio_get_whmcs_url')) {
     }
 }
 
-/*
-if (!function_exists('nfeio_xml_nfe')) {
-    function nfeio_xml_nfe($nf) {
-        $curl = curl_init();
-
-        curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nf . '/xml',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: text/json',
-                'Accept: application/json',
-                'Authorization:' . nfeio_get_setting('api_key'),
-            ],
-        ]);
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        return $response;
-    }
-}
-*/
-
 if (!function_exists('nfeio_get_whmcs_admin_url')) {
     /**
      * Returns the admin URL of WHMCS.
@@ -784,38 +660,6 @@ if (!function_exists('nfeio_get_whmcs_admin_url')) {
             ->get(['value'])[0]['value'];
     }
 }
-
-/*
-if (!function_exists('gnfe_save_nfe')) {
-    function gnfe_save_nfe($nfe, $user_id, $invoice_id, $pdf, $created_at, $updated_at) {
-        if ($nfe->servicesAmount == -1) {
-            return;
-        }
-        $data = [
-            'invoice_id' => $invoice_id,
-            'user_id' => $user_id,
-            'nfe_id' => $nfe->id,
-            'status' => $nfe->status,
-            'services_amount' => $nfe->servicesAmount,
-            'environment' => $nfe->environment,
-            'flow_status' => $nfe->flowStatus,
-            'pdf' => $pdf,
-            'created_at' => $created_at,
-            'updated_at' => $updated_at,
-            'rpsSerialNumber' => $nfe->rpsSerialNumber,
-            'rpsNumber' => $nfe->rpsNumber,
-        ];
-
-        try {
-            $save_nfe = Capsule::table('gofasnfeio')->insert($data);
-
-            return 'success';
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
-    }
-}
-*/
 
 if (!function_exists('nfeio_update_nfe')) {
     /**
@@ -905,91 +749,34 @@ if (!function_exists('nfeio_check_webhook')) {
     }
 }
 
-if (!function_exists('gnfe_create_webhook')) {
-    function gnfe_create_webhook($url) {
-        try {
-            $curl = curl_init();
-            curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/hooks');
-            curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Accept: aplication/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-            curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode(['url' => $url, 'contentType' => 'application/json', 'secret' => (string)time(), 'events' => ['issue', 'cancel', 'WaitingCalculateTaxes'], 'status' => 'Active',  ]));
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-            $response = curl_exec($curl);
-            curl_close($curl);
-        } catch (Exception $th) {
-        }
-        return json_decode(json_encode(json_decode($response)), true);
-    }
-}
-
-if (!function_exists('gnfe_delete_webhook')) {
-    function gnfe_delete_webhook($id) {
+if (!function_exists('nfeio_create_webhook')) {
+    /**
+     * Creates a webhook that points to the $url.
+     *
+     * @param string $url
+     * @return array
+     */
+    function nfeio_create_webhook($url) {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/hooks/' . $id);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $response = curl_exec($curl);
-        curl_close($curl);
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.nfe.io/v1/hooks',
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Accept: aplication/json',
+                'Authorization: ' . nfeio_get_setting('api_key')
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_POST => 1,
+            CURLOPT_POSTFIELDS => json_encode([
+                'url' => $url,
+                'contentType' => 'application/json',
+                'secret' => (string)time(),
+                'events' => ['issue', 'cancel', 'WaitingCalculateTaxes'],
+                'status' => 'Active',
+            ]),
+            CURLOPT_RETURNTRANSFER => true
+        ]);
 
-        return json_decode(json_encode(json_decode($response)), true);
-    }
-}
-/*
- * @gnfe_nfe_flowStatus string
- * Possible values:
- * CancelFailed, IssueFailed, Issued, Cancelled, PullFromCityHall, WaitingCalculateTaxes,
- * WaitingDefineRpsNumber, WaitingSend, WaitingSendCancel, WaitingReturn, WaitingDownload
- */
-if (!function_exists('gnfe_nfe_flowStatus')) {
-    function gnfe_nfe_flowStatus($flowStatus) {
-        if ($flowStatus === 'CancelFailed') {
-            $status = 'Cancelado por Erro';
-        }
-        if ($flowStatus === 'IssueFailed') {
-            $status = 'Falha ao Emitir';
-        }
-        if ($flowStatus === 'Issued') {
-            $status = 'Emitida';
-        }
-        if ($flowStatus === 'Cancelled') {
-            $status = 'Cancelada';
-        }
-        if ($flowStatus === 'PullFromCityHall') {
-            $status = 'Obtendo da Prefeitura';
-        }
-        if ($flowStatus === 'WaitingCalculateTaxes') {
-            $status = 'Aguardando Calcular Impostos';
-        }
-        if ($flowStatus === 'WaitingDefineRpsNumber') {
-            $status = 'Aguardando Definir Número Rps';
-        }
-        if ($flowStatus === 'WaitingSend') {
-            $status = 'Aguardando Enviar';
-        }
-        if ($flowStatus === 'WaitingSendCancel') {
-            $status = 'Aguardando Cancelar Envio';
-        }
-        if ($flowStatus === 'WaitingReturn') {
-            $status = 'Aguardando Retorno';
-        }
-        if ($flowStatus === 'WaitingDownload') {
-            $status = 'Aguardando Download';
-        }
-
-        return $status;
-    }
-}
-
-if (!function_exists('gnfe_get_company')) {
-    function gnfe_get_company() {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id'));
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: text/json', 'Accept: application/json', 'Authorization: ' . nfeio_get_setting('api_key')]);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         $response = curl_exec($curl);
         curl_close($curl);
 
@@ -997,203 +784,267 @@ if (!function_exists('gnfe_get_company')) {
     }
 }
 
-if (!function_exists('gnfe_customer_service_code')) {
-    function gnfe_customer_service_code($item_id) {
-        $customfields = [];
-        foreach (Capsule::table('tblcustomfields')->where('type', '=', 'product')->where('fieldname', '=', 'Código de Serviço')->get(['fieldname', 'id']) as $customfield) {
-            $customfield_id = $customfield->id;
-            $insc_customfield_value = 'NF';
-            foreach (Capsule::table('tblcustomfieldsvalues')->where('fieldid', '=', $customfield_id)->where('relid', '=', $item_id)->get(['value']) as $customfieldvalue) {
-                return $customfieldvalue->value;
-            }
-        }
+if (!function_exists('nfeio_delete_webhook')) {
+    /**
+     * Deletes a webhook that own the id $id.
+     *
+     * @param string $id
+     * @return array
+     */
+    function nfeio_delete_webhook($id) {
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.nfe.io/v1/hooks/' . $id,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: text/json',
+                'Accept: application/json',
+                'Authorization: ' . nfeio_get_setting('api_key')
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
+        $response = curl_exec($curl);
+        curl_close($curl);
+
+        return json_decode($response, true);
     }
 }
 
-function get_product_invoice($invoice_id) {
-    $query = 'SELECT tblinvoiceitems.invoiceid ,tblinvoiceitems.type ,tblinvoiceitems.relid,
-    tblinvoiceitems.description,tblinvoiceitems.amount FROM tblinvoiceitems WHERE tblinvoiceitems.invoiceid = :INVOICEID';
+if (!function_exists('nfeio_get_product_invoice')) {
+    function nfeio_get_product_invoice($invoice_id) {
+        /**
+         * Returns all products that match with the id of the invoice.
+         *
+         * @param string $invoice_id
+         * @return array $products_details
+         */
+        $query = 'SELECT tblinvoiceitems.invoiceid ,tblinvoiceitems.type ,tblinvoiceitems.relid, tblinvoiceitems.description,tblinvoiceitems.amount
+        FROM tblinvoiceitems
+        WHERE tblinvoiceitems.invoiceid = :INVOICEID';
 
-    $pdo = Capsule::connection()->getPdo();
-    $pdo->beginTransaction();
-    $statement = $pdo->prepare($query);
-    $statement->execute([':INVOICEID' => $invoice_id]);
-    $row = $statement->fetchAll();
-    $pdo->commit();
+        $pdo = Capsule::connection()->getPdo();
+        $pdo->beginTransaction();
+        $statement = $pdo->prepare($query);
+        $statement->execute([':INVOICEID' => $invoice_id]);
+        $row = $statement->fetchAll();
+        $pdo->commit();
 
-    $tax_check = nfeio_get_setting('tax');
-    foreach ($row as $item) {
-        $hosting_id = $item['relid'];
+        $tax_check = nfeio_get_setting('tax');
+        foreach ($row as $item) {
+            $hosting_id = $item['relid'];
 
-        if ($item['type'] == 'Hosting') {
-            $query = 'SELECT tblhosting.billingcycle ,tblhosting.id,tblproductcode.code_service ,tblhosting.packageid,tblhosting.id FROM tblhosting
-            LEFT JOIN tblproducts ON tblproducts.id = tblhosting.packageid
-            LEFT JOIN tblproductcode ON tblhosting.packageid = tblproductcode.product_id
-            WHERE tblhosting.id = :HOSTING';
+            if ($item['type'] == 'Hosting') {
+                $query = 'SELECT tblhosting.billingcycle ,tblhosting.id,tblproductcode.code_service ,tblhosting.packageid,tblhosting.id
+                FROM tblhosting
+                LEFT JOIN tblproducts ON tblproducts.id = tblhosting.packageid
+                LEFT JOIN tblproductcode ON tblhosting.packageid = tblproductcode.product_id
+                WHERE tblhosting.id = :HOSTING';
 
-            if ($tax_check == 'Não') {
-                $query .= ' AND tblproducts.tax = 1';
+                if ($tax_check == 'Não') {
+                    $query .= ' AND tblproducts.tax = 1';
+                } else {
+                    Capsule::table('tblproducts')->update(['tax' => 1]);
+                }
+
+                $pdo->beginTransaction();
+                $statement = $pdo->prepare($query);
+                $statement->execute([':HOSTING' => $hosting_id]);
+                $product = $statement->fetchAll();
+                $pdo->commit();
+
+                if ($product) {
+                    $product_array['id_product'] = $product[0]['packageid'];
+                    $product_array['code_service'] = $product[0]['code_service'];
+                    $product_array['amount'] = $item['amount'];
+                    $products_details[] = $product_array;
+                }
             } else {
-                Capsule::table('tblproducts')->update(['tax' => 1]);
-            }
-
-            $pdo->beginTransaction();
-            $statement = $pdo->prepare($query);
-            $statement->execute([':HOSTING' => $hosting_id]);
-            $product = $statement->fetchAll();
-            $pdo->commit();
-
-            if ($product) {
-                $product_array['id_product'] = $product[0]['packageid'];
-                $product_array['code_service'] = $product[0]['code_service'];
+                $product_array['id_product'] = $item['packageid'];
+                $product_array['code_service'] = null;
                 $product_array['amount'] = $item['amount'];
                 $products_details[] = $product_array;
             }
-        } else {
-            $product_array['id_product'] = $item['packageid'];
-            $product_array['code_service'] = null;
-            $product_array['amount'] = $item['amount'];
-            $products_details[] = $product_array;
         }
-    }
 
-    return $products_details;
+        return $products_details;
+    }
 }
 
-function dowload_doc_log() {
-    $days = 5;
+if (!function_exists('nfeio_download_log')) {
+    /**
+     * Generates and prompts to download the module log.
+     *
+     * @return void
+     */
+    function nfeio_download_log() {
+        $days = 5;
 
-    $configs = [];
-    foreach (Capsule::table('tbladdonmodules')->where('module','=','gofasnfeio')->get(['setting', 'value']) as $row) {
-        $configs[$row->setting] = $row->value;
+        $moduleConfigs = [];
+        foreach (Capsule::table('tbladdonmodules')->where('module','=','gofasnfeio')->get(['setting', 'value']) as $row) {
+            $moduleConfigs[$row->setting] = $row->value;
+        }
+
+        $lastCron = Capsule::table('tbladdonmodules')->where('setting', '=' ,'last_cron')->get(['value'])[0];
+
+        $results = localAPI('WhmcsDetails');
+        $v = $results['whmcs']['version'];
+        $actual_link = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+
+        $text = '-|date' . PHP_EOL . '-|action' . PHP_EOL . '-|request' . PHP_EOL . '-|response' . PHP_EOL . '-|status' . PHP_EOL;
+        $text .= 'version =' . $v . PHP_EOL . 'date emission =' . date('Y-m-d H:i:s') . PHP_EOL . 'url =' . $actual_link . PHP_EOL . 'conf_module = ' . json_encode($moduleConfigs) . PHP_EOL . 'last_cron = ' . $lastCron->value . PHP_EOL;
+
+        $dataAtual = toMySQLDate(getTodaysDate(false)) . ' 23:59:59';
+        $dataAnterior = date('Y-m-d',mktime (0, 0, 0, date('m'), date('d') - $days,  date('Y'))) . ' 23:59:59';
+
+        foreach (Capsule::table('tblmodulelog')->where('module','=','gofas_nfeio')->orderBy('date')->whereBetween('date', [$dataAnterior, $dataAtual])->get(['date', 'action', 'request', 'response', 'arrdata']) as $log) {
+            $text .= PHP_EOL . '==========================================================================================================================================' . PHP_EOL;
+            $text .= '-|date = ' . $log->date . PHP_EOL . '-|action = ' . $log->action . PHP_EOL . '-|request = ' . ($log->request) . PHP_EOL . '-|response = ' . ($log->response) . PHP_EOL . '-|status = ' . ($log->arrdata);
+        }
+        $text .= PHP_EOL . '====================================================================FIM DO ARQUIVO======================================================================' . PHP_EOL;
+
+        header('Content-type: text/plain');
+        header('Content-Disposition: attachment; filename="default-filename.txt"');
+        print $text;
+        exit();
     }
-
-    $lastCron = Capsule::table('tbladdonmodules')->where('setting', '=' ,'last_cron')->get(['value'])[0];
-
-    $results = localAPI('WhmcsDetails');
-    $v = $results['whmcs']['version'];
-    $actual_link = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-
-    $text = '-|date' . PHP_EOL . '-|action' . PHP_EOL . '-|request' . PHP_EOL . '-|response' . PHP_EOL . '-|status' . PHP_EOL;
-    $text .= 'version =' . $v . PHP_EOL . 'date emission =' . date('Y-m-d H:i:s') . PHP_EOL . 'url =' . $actual_link . PHP_EOL . 'conf_module = ' . json_encode($configs) . PHP_EOL . 'last_cron = ' . $lastCron->value . PHP_EOL;
-
-    $dataAtual = toMySQLDate(getTodaysDate(false)) . ' 23:59:59';
-    $dataAnterior = date('Y-m-d',mktime (0, 0, 0, date('m'), date('d') - $days,  date('Y'))) . ' 23:59:59';
-
-    foreach (Capsule::table('tblmodulelog')->where('module','=','gofas_nfeio')->orderBy('date')->whereBetween('date', [$dataAnterior, $dataAtual])->get(['date', 'action', 'request', 'response', 'arrdata']) as $log) {
-        $text .= PHP_EOL . '==========================================================================================================================================' . PHP_EOL;
-        $text .= '-|date = ' . $log->date . PHP_EOL . '-|action = ' . $log->action . PHP_EOL . '-|request = ' . ($log->request) . PHP_EOL . '-|response = ' . ($log->response) . PHP_EOL . '-|status = ' . ($log->arrdata);
-    }
-    $text .= PHP_EOL . '====================================================================FIM DO ARQUIVO======================================================================' . PHP_EOL;
-
-    header('Content-type: text/plain');
-    header('Content-Disposition: attachment; filename="default-filename.txt"');
-    print $text;
-    exit();
 }
 
-function update_status_nfe($invoice_id,$status) {
-    try {
-        $return = Capsule::table('gofasnfeio')->where('invoice_id','=',$invoice_id)->update(['status' => $status]);
-        return $return;
-    } catch (Exception $e) {
-        return $e->getMessage();
+if (!function_exists('nfeio_update_nfe_status')) {
+    /**
+     * Updates a NFe status according to $invoice_id param.
+     *
+     * @param string $invoice_id
+     * @param string $status
+     *
+     * @return mixed
+     */
+    function nfeio_update_nfe_status($invoice_id, $status) {
+        try {
+            return Capsule::table('gofasnfeio')->where('invoice_id','=',$invoice_id)->update(['status' => $status]);
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
     }
 }
 
 // ------------------------------------------------- NOVAS FUNÇÕES
-if (!function_exists('gnfe_get_client_issue_invoice_cond_from_invoice_id')) {
+if (!function_exists('nfeio_get_client_issue_nfe_cond')) {
     /**
-     * @var $vars vem do arquivo hooks.php.
-     * @return string
+     * Returns the custom condition of NFe issue of an user.
+     *
+     * @param string $invoiceId
+     * @return string|array
      */
-    function gnfe_get_client_issue_invoice_cond_from_invoice_id($invoiceId) {
-        $clientInvoiceId = localAPI('GetInvoice', ['invoiceid' => $invoiceId])['userid'];
+    function nfeio_get_client_issue_nfe_cond($invoiceId) {
+        try {
+            $clientInvoiceId = localAPI('GetInvoice', ['invoiceid' => $invoiceId])['userid'];
 
-        $clientCond = Capsule::table('mod_nfeio_custom_configs')
-            ->where('client_id', '=', $clientInvoiceId)
-            ->where('key', '=', 'issue_nfe_cond')
-            ->get(['value'])[0]->value;
-        $clientCond = strtolower($clientCond);
+            $clientCond = Capsule::table('mod_nfeio_custom_configs')
+                ->where('client_id', '=', $clientInvoiceId)
+                ->where('key', '=', 'issue_nfe_cond')
+                ->get(['value'])[0]->value;
+            $clientCond = strtolower($clientCond);
 
-        if ($clientCond !== null && $clientCond !== 'seguir configuração do módulo nfe.io') {
-            return $clientCond;
+            if ($clientCond !== null && $clientCond !== 'seguir configuração do módulo nfe.io') {
+                return $clientCond;
+            }
+
+            return 'seguir configuração do módulo nfe.io';
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
         }
-
-        return 'seguir configuração do módulo nfe.io';
     }
 }
 
-if (!function_exists('gnfe_show_issue_invoice_conds')) {
+if (!function_exists('nfeio_show_issue_invoice_conds')) {
     /**
      * Returns a <select> HTML which is used only by the AdminClientProfileTabFields hook
      * in the file hooks.php.
-     * @var int
-     * @return string
+     *
+     * @param string $clientId
+     * @return string|array
      */
-    function gnfe_show_issue_invoice_conds($clientId) {
-        $conditions = Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->where('setting', '=', 'issue_note_conditions')->get(['value'])[0]->value;
-        $conditions = explode(',', $conditions);
+    function nfeio_show_issue_invoice_conds($clientId) {
+        try {
+            $conditions = Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->where('setting', '=', 'issue_note_conditions')->get(['value'])[0]->value;
+            $conditions = explode(',', $conditions);
 
-        $previousClientCond = Capsule::table('mod_nfeio_custom_configs')->where('client_id', '=', $clientId)->get(['value'])[0]->value;
+            $previousClientCond = Capsule::table('mod_nfeio_custom_configs')->where('client_id', '=', $clientId)->get(['value'])[0]->value;
 
-        $select = '<select name="issue_note_cond" class="form-control select-inline">';
+            $select = '<select name="issue_note_cond" class="form-control select-inline">';
 
-        // Sets the previous issue condition in the first index of array $conditions.
-        // in order to the previous condition be showed in the client prifile.
-        if ($previousClientCond != null) {
-            $previousCondKey = array_search($previousClientCond, $conditions);
-            unset($conditions[$previousCondKey]);
-            $select .= '<option value="' . $previousClientCond . '">' . $previousClientCond . '</option>';
-        } else {
-            $defaultCond = 'Seguir configuração do módulo NFE.io';
-            $defaultCondKey = array_search($defaultCond, $conditions);
-            unset($conditions[$defaultCondKey]);
-            $select .= '<option value="Seguir configuração do módulo NFE.io">Seguir configuração do módulo NFE.io</option>';
+            // Sets the previous issue condition in the first index of array $conditions.
+            // in order to the previous condition be showed in the client prifile.
+            if ($previousClientCond != null) {
+                $previousCondKey = array_search($previousClientCond, $conditions);
+                unset($conditions[$previousCondKey]);
+                $select .= '<option value="' . $previousClientCond . '">' . $previousClientCond . '</option>';
+            } else {
+                $defaultCond = 'Seguir configuração do módulo NFE.io';
+                $defaultCondKey = array_search($defaultCond, $conditions);
+                unset($conditions[$defaultCondKey]);
+                $select .= '<option value="Seguir configuração do módulo NFE.io">Seguir configuração do módulo NFE.io</option>';
+            }
+
+            foreach ($conditions as $cond) {
+                $select .= '<option value="' . $cond . '">' . $cond . '</option>';
+            }
+            $select .= '</select>';
+
+            return $select;
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
         }
-
-        foreach ($conditions as $cond) {
-            $select .= '<option value="' . $cond . '">' . $cond . '</option>';
-        }
-        $select .= '</select>';
-
-        return $select;
     }
 }
 
-if (!function_exists('gnfe_save_client_issue_invoice_cond')) {
+if (!function_exists('nfeio_save_client_issue_nfe_cond')) {
     /**
      * Insert the clientId and his condition of sending invoice in the table mod_nfeio_custom_configs.
-     * @var $client int
-     * @var $invoiceCond string
+     *
+     * @param string $clientId
+     * @param string $newCond
+     * @return void|array
      */
-    function gnfe_save_client_issue_invoice_cond($clientId, $newCond) {
-        $previousClientCond = Capsule::table('mod_nfeio_custom_configs')->where('client_id', '=', $clientId)->get(['value'])[0]->value;
+    function nfeio_save_client_issue_nfe_cond($clientId, $newCond) {
+        try {
+            $previousClientCond = Capsule::table('mod_nfeio_custom_configs')->where('client_id', '=', $clientId)->get(['value'])[0]->value;
 
-        if ($newCond !== $previousClientCond) {
-            if ($previousClientCond == null) {
-                Capsule::table('mod_nfeio_custom_configs')->insert([
-                    'key' => 'issue_nfe_cond',
-                    'client_id' => $clientId,
-                    'value' => $newCond
-                ]);
-            } else {
-                Capsule::table('mod_nfeio_custom_configs')
+            // Verify if there was a change in the issue condition to make any modification in the database.
+            if ($newCond !== $previousClientCond) {
+                if ($previousClientCond == null) {
+                    Capsule::table('mod_nfeio_custom_configs')->insert([
+                        'key' => 'issue_nfe_cond',
+                        'client_id' => $clientId,
+                        'value' => $newCond
+                    ]);
+                } else {
+                    Capsule::table('mod_nfeio_custom_configs')
                     ->where('client_id', '=', $clientId)
                     ->where('key', '=', 'issue_nfe_cond')
                     ->update(['value' => $newCond]);
+                }
             }
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
         }
     }
 }
 
-/**
- * Inserts the conditions of sending invoices in the database.
- */
-if (!function_exists('gnfe_insert_issue_nfe_cond_in_database')) {
-    function gnfe_insert_issue_nfe_cond_in_database() {
-        $conditions = 'Quando a fatura é gerada,Quando a fatura é paga,Seguir configuração do módulo NFE.io';
+if (!function_exists('nfeio_save_issue_nfe_conds')) {
+    /**
+     * Inserts the conditions of sending invoices in the database.
+     *
+     * @return void|array
+     */
+    function nfeio_save_issue_nfe_conds() {
+        try {
+            $conditions = 'Quando a fatura é gerada,Quando a fatura é paga,Seguir configuração do módulo NFE.io';
 
-        Capsule::table('tbladdonmodules')->insert(['module' => 'gofasnfeio','setting' => 'issue_note_conditions','value' => $conditions]);
+            Capsule::table('tbladdonmodules')->insert(['module' => 'gofasnfeio','setting' => 'issue_note_conditions','value' => $conditions]);
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
     }
 }

@@ -48,5 +48,5 @@ add_hook('AdminClientProfileTabFields', 1, function($vars) {
 
 add_hook('AdminClientProfileTabFieldsSave', 1, function($vars) {
     require_once __DIR__ . '/functions.php';
-    gnfe_save_client_issue_invoice_cond($vars['userid'], $_REQUEST['issue_note_cond']);
+    nfeio_save_client_issue_nfe_cond($vars['userid'], $_REQUEST['issue_note_cond']);
 });

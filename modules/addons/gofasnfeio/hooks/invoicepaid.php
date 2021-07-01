@@ -4,7 +4,7 @@ if (!defined('WHMCS')) {
     exit();
 }
 $params = nfeio_get_setting();
-$issueInvoiceCondition = gnfe_get_client_issue_invoice_cond_from_invoice_id($vars['invoiceid']);
+$issueInvoiceCondition = nfeio_get_client_issue_nfe_cond($vars['invoiceid']);
 
 // Uma fatura é paga
 if ($issueInvoiceCondition === 'quando a fatura é paga') {

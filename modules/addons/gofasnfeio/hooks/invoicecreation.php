@@ -2,7 +2,7 @@
 
 defined('WHMCS') or exit;
 
-$issueInvoiceCondition = gnfe_get_client_issue_invoice_cond_from_invoice_id($vars['invoiceid']);
+$issueInvoiceCondition = nfeio_get_client_issue_nfe_cond($vars['invoiceid']);
 
 if ($issueInvoiceCondition === 'quando a fatura é gerada') {
     logModuleCall('gofas_nfeio', 'quando a fatura é gerada invoicecreation', $issueInvoiceCondition , '', '', '');
