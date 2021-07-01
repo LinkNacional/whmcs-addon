@@ -715,7 +715,7 @@ if (!function_exists('nfeio_get_whmcs_admin_url')) {
      */
     function nfeio_get_whmcs_admin_url() {
         return Capsule::table('tblconfiguration')
-            ->where('setting', '=', 'gnfewhmcsadminurl')
+            ->where('setting', '=', 'nfeioWhmcsAdminUrl')
             ->get(['value'])[0]['value'];
     }
 }
@@ -1064,7 +1064,7 @@ if (!function_exists('nfeio_save_client_issue_nfe_cond')) {
      *
      * @param string $clientId
      * @param string $newCond
-     * 
+     *
      * @return void|array
      */
     function nfeio_save_client_issue_nfe_cond($clientId, $newCond) {
@@ -1109,18 +1109,32 @@ if (!function_exists('nfeio_save_issue_nfe_conds')) {
     }
 }
 
-function set_nfeio_admin_url() {
-    $actual_link = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . "://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
-
-    if (stripos($actual_link, '/configaddonmods.php')) {
-        $whmcs_url__ = str_replace('\\', '/', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . substr(getcwd(), strlen($_SERVER['DOCUMENT_ROOT'])));
-        $admin_url = $whmcs_url__ . '/';
+if (!function_exists('nfeio_get_whmcs_admin_url')) {
+    function nfeio_get_whmcs_admin_url() {
+        return Capsule::table('tblconfiguration')->where('setting', '=', 'nfeioWhmcsAdminUrl')->get(['value'])[0]->value;
     }
+}
 
-    Capsule::table('tblconfiguration')->insert([
-        'setting' => 'nfeioWhmcsAdminUrl',
-        'value' => $admin_url,
-        'created_at' => date('Y-m-d H:i:s'),
-        'updated_at' => date('Y-m-d H:i:s')
-    ]);
+
+if (!function_exists('nfeio_set_admin_url')) {
+    /**
+     * Saves the WHMCS /admin URL in the tblconfiguration
+     */
+    function nfeio_set_admin_url($docRoot, $httpHost) {
+        if (Capsule::table('tblconfiguration')->where('setting', '=', 'nfeioWhmcsAdminUrl')->count() === 0) {
+            $actual_link = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . "://{$httpHost}{$_SERVER['REQUEST_URI']}";
+
+            if (stripos($actual_link, '/configaddonmods.php')) {
+                $whmcs_url__ = str_replace('\\', '/', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $httpHost . substr(getcwd(), strlen($docRoot)));
+                $admin_url = $whmcs_url__ . '/';
+            }
+
+            Capsule::table('tblconfiguration')->insert([
+                'setting' => 'nfeioWhmcsAdminUrl',
+                'value' => $admin_url,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+    }
 }

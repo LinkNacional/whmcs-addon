@@ -2,9 +2,11 @@
 
 defined('WHMCS') or exit;
 
-require_once __DIR__ . './functions.php';
+use WHMCS\Database\Capsule;
+
+require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/output.php';
-require_once __DIR__ . './database.php';
+require_once __DIR__ . '/database.php';
 
 /**
  * Shows the module setting fields.
@@ -18,7 +20,7 @@ function nfeio_config() {
         'name' => 'NFE.io',
         'description' => 'Módulo NFE.io de Nota Fiscal para WHMCS',
         'version' => $moduleVersion,
-        'author' => '<a title="NFE.io Nota Fiscal WHMCS" href="https://github.com/nfe/whmcs-addon/" target="_blank" ><img src="' . $whmcs_url . 'modules/addons/gofasnfeio/lib/logo.png"></a>',
+        'author' => '<a title="NFE.io Nota Fiscal WHMCS" href="https://github.com/nfe/whmcs-addon/" target="_blank" ><img src="' . nfeio_get_whmcs_admin_url() . 'modules/addons/gofasnfeio/lib/logo.png"></a>',
         'fields' => array (
 
             'api_key' => array(
@@ -158,7 +160,7 @@ function nfeio_config() {
  * Creates the tables in the database.
  */
 function nfeio_activate() {
-    set_nfeio_admin_url();
+    nfeio_set_admin_url($_SERVER['DOCUMENT_ROOT'], $_SERVER['HTTP_HOST']);
     nfeio_create_tables();
 }
 
@@ -184,7 +186,7 @@ function nfeio_upgrade ($vars) {
         'gnfe_webhook_id',
         'gnfe_email_nfe',
         'gnfewhmcsurl',
-        'gnfewhmcsadminurl',
+        'nfeioWhmcsAdminUrl',
         'gnfewhmcsadminpath'
     ];
 
@@ -194,6 +196,6 @@ function nfeio_upgrade ($vars) {
             ->delete();
     }
 
-    set_nfeio_admin_url();
+    nfeio_set_admin_url($_SERVER['DOCUMENT_ROOT'], $_SERVER['HTTP_HOST']);
     nfeio_create_tables();
 }

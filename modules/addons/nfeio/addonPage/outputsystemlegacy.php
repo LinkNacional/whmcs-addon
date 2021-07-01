@@ -4,13 +4,13 @@ if (!defined('WHMCS')) {
 }
 use WHMCS\Database\Capsule;
 
- foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'gnfewhmcsadminurl')->get(['value']) as $gnfewhmcsadminurl_) {
-     $gnfewhmcsadminurl = $gnfewhmcsadminurl_->value;
+ foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'nfeioWhmcsAdminUrl')->get(['value']) as $gnfewhmcsadminurl_) {
+     $nfeioWhmcsAdminUrl = $gnfewhmcsadminurl_->value;
  }
  ?>
 <div style="margin-bottom: 1%;">
-    <a href="<?php echo $gnfewhmcsadminurl; ?>addonmodules.php?module=gofasnfeio&action=code_product" class="btn btn-primary" id="gnfe_cancel" title="Código de Serviços">Código de Serviços</a>
-    <a href="<?php echo $gnfewhmcsadminurl; ?>addonmodules.php?module=gofasnfeio&action=nfeio" class="btn btn-primary" id="gnfe_cancel" title="NFE.io">NFE.io</a>
+    <a href="<?php echo $nfeioWhmcsAdminUrl; ?>addonmodules.php?module=gofasnfeio&action=code_product" class="btn btn-primary" id="gnfe_cancel" title="Código de Serviços">Código de Serviços</a>
+    <a href="<?php echo $nfeioWhmcsAdminUrl; ?>addonmodules.php?module=gofasnfeio&action=nfeio" class="btn btn-primary" id="gnfe_cancel" title="NFE.io">NFE.io</a>
 </div>
 <ul class="nav nav-tabs admin-tabs" role="tablist">
 	<li class="<?php if (!$_GET['aba']) {
@@ -19,7 +19,7 @@ use WHMCS\Database\Capsule;
 </ul>
 <div class="tab-content admin-tabs"><div class="tab-pane active">
 
-<?php	
+<?php
         if ($_GET['acao'] == 'emitir') {
             $sql = mysql_query("SELECT i.id AS id, i.total AS total, c.id AS cliente_id, c.firstname AS firstname, c.lastname AS lastname, c.companyname AS companyname, c.email AS email, c.country AS country, c.postcode AS postcode, c.address1 AS address1, c.address2 AS address2, c.city AS city, c.state AS state FROM tblinvoices i, tblclients c WHERE i.userid = c.id AND i.id = '" . $_GET['cod'] . "'");
             $row = mysql_fetch_array($sql);
@@ -121,12 +121,12 @@ use WHMCS\Database\Capsule;
 
                 $query = "UPDATE mod_nfeio SET cliente='" . $row['cliente_id'] . "', nf='" . $nfeio_emitirNF->id . "', emissao=NOW(), valor='" . $row['total'] . "', status='" . $nfeio_emitirNF->status . "', retorno='" . serialize($nfeio_emitirNF) . "', msg='" . $msgRetorno . "' WHERE fatura='" . $_GET['cod'] . "'";
                 $result = full_query($query);
-            }		
+            }
 
             echo "<meta HTTP-EQUIV='Refresh' CONTENT='0;URL=" . $vars['modulelink'] . "'>";
         } ?>
 <table id="sortabletbl0" class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3"><tr><th>Fatura</th><th>Data da emissão</th><th>Tomador</th><th>Valor (R$)</th><th>Status</th><th>Ações</th></tr>
-	
+
 <?php
 	$sql = mysql_query('SELECT m.fatura AS fatura, m.nf AS nf, m.retorno AS retorno, m.emissao AS emissao, m.valor AS valor, m.status AS status, m.msg AS msg, c.id AS cliente_id, c.firstname AS nome, c.lastname AS sobrenome FROM mod_nfeio m, tblclients c WHERE m.cliente = c.id ORDER BY m.id DESC');
         if (mysql_num_rows($sql)) {

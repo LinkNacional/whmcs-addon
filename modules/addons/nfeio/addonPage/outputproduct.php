@@ -20,21 +20,21 @@ use WHMCS\Database\Capsule;
             }
             $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Código Salvo</div>';
             header_remove();
-            header('Location: ' . $gnfewhmcsadminurl . 'addonmodules.php?module=gofasnfeio&action=code_product&gnfe_message=' . base64_encode(urlencode($message)));
+            header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=code_product&gnfe_message=' . base64_encode(urlencode($message)));
 
             exit;
         } catch (\Exception $e) {
             $e->getMessage();
             $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">' . $e->getMessage() . '</div>';
             header_remove();
-            header('Location: ' . $gnfewhmcsadminurl . 'addonmodules.php?module=gofasnfeio&action=code_product&gnfe_message=' . base64_encode(urlencode($message)));
+            header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=code_product&gnfe_message=' . base64_encode(urlencode($message)));
 
             exit;
         }
     }
 
-    foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'gnfewhmcsadminurl')->get(['value']) as $gnfewhmcsadminurl_) {
-        $gnfewhmcsadminurl = $gnfewhmcsadminurl_->value;
+    foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'nfeioWhmcsAdminUrl')->get(['value']) as $gnfewhmcsadminurl_) {
+        $nfeioWhmcsAdminUrl = $gnfewhmcsadminurl_->value;
     }
     $nfes = [];
     foreach (Capsule::table('tblproducts')->orderBy('id', 'desc')->get(['id']) as $nfes_) {
@@ -48,22 +48,22 @@ use WHMCS\Database\Capsule;
         $created_at = $product->created_at ? date('d/m/Y', strtotime($product->created_at)) : '';
         $update_at = $product->update_at ? date('d/m/Y', strtotime($product->update_at)) : '';
 
-        $html_table .= '<tr><td><a href="' . $gnfewhmcsadminurl . 'configproducts.php?action=edit&id=' . $product->id . '" target="blank">#' . $product->id . '</a></td>
+        $html_table .= '<tr><td><a href="' . $nfeioWhmcsAdminUrl . 'configproducts.php?action=edit&id=' . $product->id . '" target="blank">#' . $product->id . '</a></td>
                 <td style="text-align: center; vertical-align: middle;">' . $created_at . '</td>
                 <td style="text-align: center; vertical-align: middle;">' . $update_at . '</td>
-                <td><a href="' . $gnfewhmcsadminurl . 'configproducts.php?action=edit&id=' . $product->id . '" target="blank">' . $product->name . '</a></td>
+                <td><a href="' . $nfeioWhmcsAdminUrl . 'configproducts.php?action=edit&id=' . $product->id . '" target="blank">' . $product->name . '</a></td>
                 <form action="" method="post">
                 <td><input type="text" name="code" value="' . $product->code_service . '" style="width: 100%;"></td>
-                
+
                 <input type="hidden" class="product" name="product" value="' . $product->id . '">
                 <td><input type="submit"  style="width: 100%;" value="Salvar"></td>
                 </form>';
     }
 
     echo '
-            <a href="' . $gnfewhmcsadminurl . 'addonmodules.php?module=gofasnfeio&action=nfeio" class="btn btn-primary" id="gnfe_cancel" title="NFE.io">NFE.io</a>
-            <a href="' . $gnfewhmcsadminurl . 'addonmodules.php?module=gofasnfeio&action=nfeio_legacy" class="btn btn-primary" title="Sistema legado">Sistema legado</a>
-		
+            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=nfeio" class="btn btn-primary" id="gnfe_cancel" title="NFE.io">NFE.io</a>
+            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=nfeio_legacy" class="btn btn-primary" title="Sistema legado">Sistema legado</a>
+
             <div class="tab-content admin-tabs">
 					<table id="sortabletbl0" class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3">
 						<tbody>
@@ -75,9 +75,9 @@ use WHMCS\Database\Capsule;
 								<th>Código de Serviço</th>
 								<th>Salvar</th>
 							</tr>
-							
+
 								' . $html_table . '
-							
+
 						</tbody>
 					</table>
 				</div>
