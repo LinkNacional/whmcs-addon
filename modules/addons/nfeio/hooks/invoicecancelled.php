@@ -1,8 +1,7 @@
 <?php
 
-if (!defined('WHMCS')) {
-    exit();
-}
+defined('WHMCS') or exit;
+
 $params = nfeio_get_setting();
 if ($params['cancel_invoice_cancels_nfe']) {
     $nfe_for_invoice = nfeio_get_local_nfe($vars['invoiceid'], ['nfe_id', 'status', 'services_amount', 'environment']);

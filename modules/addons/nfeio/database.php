@@ -70,8 +70,11 @@ if (!function_exists('nfeio_create_tables')) {
     }
 }
 
-if (!function_exists('set_custom_field_ini_date')) {
-    function set_custom_field_ini_date() {
+if (!function_exists('nfeio_set_initial_date')) {
+    /**
+     * Inserts in the table tbladdonmodule the first date the module is initialized.
+     */
+    function nfeio_set_initial_date() {
         $currentDate = getTodaysDate(false);
         $currentDate = toMySQLDate($data);
 
@@ -90,7 +93,31 @@ if (!function_exists('set_custom_field_ini_date')) {
                 ]);
             }
         } catch (\Exception $e) {
-            nfeio_log('nfeio', 'set_custom_field_ini_date: initial_date', '', $e->getMessage(), '');
+            nfeio_log('nfeio', 'nfeio_set_initial_date: initial_date', '', $e->getMessage(), '');
+        }
+    }
+}
+
+if (!function_exists('nfeio_set_issue_nfe_conds')) {
+    /**
+     * Inserts the conditions of sending invoices in the database.
+     *
+     * @return void|array
+     */
+    function nfeio_set_issue_nfe_conds() {
+        try {
+            if (
+                Capsule::table('tbladdonmodules')
+                    ->where('module', '=', 'nfeio')
+                    ->where('setting', '=', 'issue_note_conditions')
+                    ->get(['value'])->count() === 0
+            ) {
+                $conditions = 'Quando a fatura é gerada,Quando a fatura é paga,Seguir configuração do módulo NFE.io';
+
+                Capsule::table('tbladdonmodules')->insert(['module' => 'nfeio','setting' => 'issue_note_conditions','value' => $conditions]);
+            }
+        } catch (Exception $e) {
+            nfeio_log('nfeio', 'nfeio_set_issue_nfe_conds', '', $e->getMessage(), '');
         }
     }
 }

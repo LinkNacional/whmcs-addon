@@ -1,8 +1,7 @@
 <?php
 
-if (!defined('WHMCS')) {
-    exit();
-}
+defined('WHMCS') or exit;
+
 use WHMCS\Database\Capsule;
 
 $params = nfeio_get_setting();

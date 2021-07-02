@@ -1,8 +1,7 @@
 <?php
 
-if (!defined('WHMCS')) {
-    exit();
-}
+defined('WHMCS') or exit;
+
 use WHMCS\Database\Capsule;
 
 function emitNFE($invoices,$nfeio) {

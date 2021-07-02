@@ -1,7 +1,5 @@
 <?php
-if (!defined('WHMCS')) {
-    die('Esse arquivo não pode ser acessado diretamente.');
-}
+defined('WHMCS') or exit('Esse arquivo não pode ser acessado diretamente.');
 use WHMCS\Database\Capsule;
 
  foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'nfeioWhmcsAdminUrl')->get(['value']) as $gnfewhmcsadminurl_) {

@@ -1,11 +1,8 @@
 <?php
 
-if (!defined('WHMCS')) {
-    exit();
-}
+defined('WHMCS') or exit;
+
 use WHMCS\Database\Capsule;
-
-
 
 if (!function_exists('nfeio_get_setting')) {
     /**
@@ -32,7 +29,7 @@ if (!function_exists('nfeio_get_setting')) {
                 ->get(['value'])[0]->value;
 
         } catch (Exception $e) {
-            return ['error' => $e->getMessage()];
+            nfeio_log('nfeio', 'nfeio_get_setting', 'Campo "' . $getOne . '" não pôde ser encontrado.' , $e->getMessage(), '');
         }
     }
 }
@@ -698,19 +695,6 @@ if (!function_exists('nfeio_xml_nfe')) {
     }
 }
 
-if (!function_exists('nfeio_get_whmcs_url')) {
-    /**
-     * Returns the URL of WHMCS.
-     *
-     * @return string
-     */
-    function nfeio_get_whmcs_url() {
-        return Capsule::table('tblconfiguration')
-                ->where('setting', '=', 'SystemURL')
-                ->get(['value'])[0]['value'];
-    }
-}
-
 if (!function_exists('nfeio_get_whmcs_admin_url')) {
     /**
      * Returns the admin URL of WHMCS.
@@ -720,7 +704,20 @@ if (!function_exists('nfeio_get_whmcs_admin_url')) {
     function nfeio_get_whmcs_admin_url() {
         return Capsule::table('tblconfiguration')
             ->where('setting', '=', 'nfeioWhmcsAdminUrl')
-            ->get(['value'])[0]['value'];
+            ->get(['value'])[0]->value;
+    }
+}
+
+if (!function_exists('nfeio_get_whmcs_url')) {
+    /**
+     * Returns the admin URL of WHMCS.
+     *
+     * @return string
+     */
+    function nfeio_get_whmcs_url() {
+        return Capsule::table('tblconfiguration')
+            ->where('setting', '=', 'SystemURL')
+            ->get(['value'])[0]->value;
     }
 }
 
@@ -1098,34 +1095,17 @@ if (!function_exists('nfeio_save_client_issue_nfe_cond')) {
     }
 }
 
-if (!function_exists('nfeio_save_issue_nfe_conds')) {
-    /**
-     * Inserts the conditions of sending invoices in the database.
-     *
-     * @return void|array
-     */
-    function nfeio_save_issue_nfe_conds() {
-        try {
-            $conditions = 'Quando a fatura é gerada,Quando a fatura é paga,Seguir configuração do módulo NFE.io';
-
-            Capsule::table('tbladdonmodules')->insert(['module' => 'nfeio','setting' => 'issue_note_conditions','value' => $conditions]);
-        } catch (Exception $e) {
-            return ['error' => $e->getMessage()];
-        }
-    }
-}
-
 if (!function_exists('nfeio_get_whmcs_admin_url')) {
     function nfeio_get_whmcs_admin_url() {
         return Capsule::table('tblconfiguration')->where('setting', '=', 'nfeioWhmcsAdminUrl')->get(['value'])[0]->value;
     }
 }
 
-if (!function_exists('nfeio_set_admin_url')) {
+if (!function_exists('nfeio_set_whmcs_admin_url')) {
     /**
      * Saves the WHMCS /admin URL in the tblconfiguration
      */
-    function nfeio_set_admin_url($docRoot, $httpHost) {
+    function nfeio_set_whmcs_admin_url($docRoot, $httpHost) {
         if (Capsule::table('tblconfiguration')->where('setting', '=', 'nfeioWhmcsAdminUrl')->count() === 0) {
             $actual_link = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . "://{$httpHost}{$_SERVER['REQUEST_URI']}";
 
@@ -1140,6 +1120,37 @@ if (!function_exists('nfeio_set_admin_url')) {
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ]);
+        }
+    }
+}
+
+if (!function_exists('nfeio_get_module_last_version')) {
+    function nfeio_get_module_last_version() {
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.github.com/repos/nfe/whmcs-addon/releases',
+            CURLOPT_HTTPHEADER => [
+                'Content-type: application/json',
+                'User-Agent: whmcs_nfeio'
+            ],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_CONNECTTIMEOUT => 30
+        ]);
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+        curl_close($curl);
+
+        if ($httpCode === 200) {
+            $lastVersion = json_decode($response)[0]->tag_name;
+            $lastVersion = str_replace('v.', '', $lastVersion);
+
+            return $lastVersion;
+        } else {
+            nfeio_log('nfeio', 'nfeio_get_module_last_version', 'https://api.github.com/repos/nfe/whmcs-addon/releases', 'httpCode: ' . $httpCode . 'response: ' . $response, '');
+            return [];
         }
     }
 }

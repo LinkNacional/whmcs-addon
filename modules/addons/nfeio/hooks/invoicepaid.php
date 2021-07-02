@@ -1,8 +1,7 @@
 <?php
 
-if (!defined('WHMCS')) {
-    exit();
-}
+defined('WHMCS') or exit;
+
 $params = nfeio_get_setting();
 $issueInvoiceCondition = nfeio_get_client_issue_nfe_cond($vars['invoiceid']);
 

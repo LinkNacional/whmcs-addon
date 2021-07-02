@@ -14,14 +14,24 @@ require_once __DIR__ . '/database.php';
 function nfeio_config() {
     if ($_GET['doc_log']) nfeio_download_log();
 
-    $moduleVersion = '2.0.0';
+    $moduleVersion = '1.0.0';
+    $currentlyInstalledVersion = nfeio_get_setting('version');
+    $whmcsSystemUrl = nfeio_get_whmcs_url();
 
     $moduleSettings = array(
         'name' => 'NFE.io',
         'description' => 'Módulo NFE.io de Nota Fiscal para WHMCS',
         'version' => $moduleVersion,
-        'author' => '<a title="NFE.io Nota Fiscal WHMCS" href="https://github.com/nfe/whmcs-addon/" target="_blank" ><img src="' . nfeio_get_whmcs_admin_url() . 'modules/addons/nfeio/lib/logo.png"></a>',
+        'author' => '<a title="NFE.io Nota Fiscal WHMCS" href="https://github.com/nfe/whmcs-addon/" target="_blank" ><img src="' . $whmcsSystemUrl . 'modules/addons/nfeio/lib/logo.png"></a>',
         'fields' => array (
+
+            'header' => array(
+                'Description' => '
+                <h4 style="padding-top: 5px;">Módulo Nota Fiscal NFE.io para WHMCS | v' . $moduleVersion . '</h4>
+                <a style="text-decoration:underline;" href="https://app.nfe.io/companies/edit/fiscal/' . nfeio_get_setting('company_id') . '" target="_blank">
+                Consultar: RPS / Série do RPS
+                </a>'
+            ),
 
             'api_key' => array(
                 'FriendlyName' => 'API Key',
@@ -33,21 +43,9 @@ function nfeio_config() {
                 'FriendlyName' => 'ID da Empresa',
                 'Type' => 'text',
                 'Description' => '<a href="https://app.nfe.io/companies/" style="text-decoration:underline;" target="_blank">Obter ID da empresa</a>',
-            )
-        )
-    );
+            ),
 
-    if (empty(nfeio_get_setting('api_key')) || empty(nfeio_get_setting('company_id'))) {
-        $moduleSettings['header']['Description'] .= 'Preencha os campos de API Key e ID da Empresa para acessar as configurações do módulo.';
-    } else {
-        $moduleSettings['header']['Description'] .=
-        '<a style="text-decoration:underline;" href="https://app.nfe.io/companies/edit/fiscal/' . nfeio_get_setting('company_id') . '" target="_blank">
-            Consultar: RPS / Série do RPS
-        </a>';
-
-        $moduleSettings['fields'] .= array (
-
-            'service_conde' => array(
+            'service_code' => array(
                 'FriendlyName' => 'Código de Serviço Principal',
                 'Type' => 'text',
                 'Description' => '<a style="text-decoration:underline;" href="https://nfe.io/docs/nota-fiscal-servico/conceitos-nfs-e/#o-que-e-codigo-de-servico" target="_blank">O que é Código de Serviço?</a>',
@@ -57,35 +55,14 @@ function nfeio_config() {
                 'FriendlyName' => 'Agendar Emissão',
                 'Type' => 'text',
                 'Default' => '',
-                'Description' => '<br>Número de dias após o pagamento da fatura que as notas devem ser emitidas. <span style="color:#c00">Preencher essa opção desativa a opção abaixo.</span>',
+                'Description' => '<div>Número de dias após o pagamento da fatura que as notas devem ser emitidas. <span style="color:#c00; font-weight: bold;">Preencher essa opção desativa a opção abaixo.</span></div>',
             ),
 
             'issue_note_default_cond' => array(
                 'FriendlyName' => 'Quando emitir NFE',
-                'Type' => 'radio',
+                'Type' => 'dropdown',
                 'Options' => 'Quando a fatura é gerada,Quando a fatura é paga,Manualmente.',
                 'Default' => 'Manualmente'
-            ),
-
-            'email_nfe_config' => array(
-                'FriendlyName' => 'Disparar e-mail com a nota',
-                'Type' => 'yesno',
-                'Default' => 'yes',
-                'Description' => 'Permitir o disparo da nota fiscal via NFE.io para o e-mail do cliente.'
-            ),
-
-            'cancel_invoice_cancels_nfe' => array(
-                'FriendlyName' => 'Cancelar NFE',
-                'Type' => 'yesno',
-                'Default' => 'yes',
-                'Description' => 'Cancela a nota fiscal quando a fatura cancelada.',
-            ),
-
-            'debug' => array(
-                'FriendlyName' => 'Debug',
-                'Type' => 'yesno',
-                'Default' => 'yes',
-                'Description' => 'Marque essa opção para salvar informações de diagnóstico no <a target="_blank" style="text-decoration:underline;" href="' . $admin_url . 'systemmodulelog.php">Log de Módulo</a> | Baixar log <a target="_blank" href="' . $admin_url . 'configaddonmods.php?doc_log=true" style="text-decoration:underline;">AQUI</a>',
             ),
 
             'municipal_inscri' => array(
@@ -109,18 +86,42 @@ function nfeio_config() {
                 'Description' => 'Escolha o campo personalizado do CNPJ'
             ),
 
+            'invoice_details' => array(
+                'FriendlyName' => 'O que deve aparecer nos detalhes da fatura?',
+                'Type' => 'dropdown',
+                'Options' => 'Número da fatura,Nome dos serviços,Número da fatura + Nome dos serviços',
+                'Default' => 'Número da fatura',
+            ),
+
+            'email_nfe_config' => array(
+                'FriendlyName' => 'Disparar e-mail com a nota',
+                'Type' => 'yesno',
+                'Default' => 'yes',
+                'Description' => 'Permitir o disparo da nota fiscal via NFE.io para o e-mail do cliente.'
+            ),
+
+            'cancel_invoice_cancels_nfe' => array(
+                'FriendlyName' => 'Cancelar NFE',
+                'Type' => 'yesno',
+                'Default' => 'yes',
+                'Description' => 'Cancela a nota fiscal quando a fatura cancelada.',
+            ),
+
+            'debug' => array(
+                'FriendlyName' => 'Debug',
+                'Type' => 'yesno',
+                'Default' => 'yes',
+                'Description' => 'Marque essa opção para salvar informações de diagnóstico no
+                <a target="_blank" style="text-decoration:underline;" href="' . $whmcsSystemUrl . 'systemmodulelog.php">Log de Módulo</a>
+                | Baixar log <a target="_blank" href="' . $whmcsSystemUrl . 'configaddonmods.php?doc_log=true" style="text-decoration:underline;">AQUI
+                </a>',
+            ),
+
             'apply_tax' => array(
                 'FriendlyName' => 'Aplicar imposto automaticamente em todos os produtos ?',
                 'Type' => 'radio',
                 'Options' => 'Sim,Não',
                 'Default' => 'Sim'
-            ),
-
-            'invoice_details' => array(
-                'FriendlyName' => 'O que deve aparecer nos detalhes da fatura?',
-                'Type' => 'radio',
-                'Options' => 'Número da fatura,Nome dos serviços,Número da fatura + Nome dos serviços',
-                'Default' => 'Número da fatura',
             ),
 
             'send_invoice_url' => array(
@@ -142,15 +143,28 @@ function nfeio_config() {
                 'Type' => 'yesno',
                 'Default' => '',
                 'Description' => 'Habilitar ambiente de desenvolvimento',
+            ),
+
+            'footer' => array(
+                'Description' => '&copy; ' . date('Y') . ' <a target="_blank" title="Para suporte utilize o GitHub" href="https://github.com/nfe/whmcs-addon/issues">Suporte do módulo</a>'
             )
+        )
+    );
 
-        );
+    $lastVersion = nfeio_get_module_last_version();
+
+    if (version_compare($lastVersion, $moduleVersion, '>')) {
+        $moduleSettings['fields']['header']['Description'] .=
+        '<span style="display: block; color: red; font-size: 14px; padding-top: 10px; padding-bottom: 5px;">
+            <i class="fas fa-exclamation-triangle"></i> Há uma nova versão disponível. Acesse:
+            <a style="text-decoration:underline;" href="https://github.com/nfe/whmcs-addon/releases" target="_blank">Nova versão</a>
+        </span>';
+    } else {
+        $moduleSettings['fields']['header']['Description'] .=
+        '<span style="display: block; color: green; font-size: 14px; padding-top: 10px; padding-bottom: 5px;">
+            <i class="fas fa-check-square"></i> Esta é a versão mais recente do módulo.
+        </span>';
     }
-
-    $moduleSettings['fields'] .=
-    array('footer' => array(
-        'Description' => '&copy; ' . date('Y') . ' <a target="_blank" title="Para suporte utilize o GitHub" href="https://github.com/nfe/whmcs-addon/issues">Suporte módulo</a>',
-    ));
 
     return $moduleSettings;
 }
@@ -160,8 +174,10 @@ function nfeio_config() {
  * Creates the tables in the database.
  */
 function nfeio_activate() {
-    nfeio_set_admin_url($_SERVER['DOCUMENT_ROOT'], $_SERVER['HTTP_HOST']);
     nfeio_create_tables();
+    nfeio_set_whmcs_admin_url($_SERVER['DOCUMENT_ROOT'], $_SERVER['HTTP_HOST']);
+    nfeio_set_issue_nfe_conds();
+    nfeio_set_initial_date();
 }
 
 /**
@@ -178,24 +194,61 @@ function nfeio_deactivate() {
  *
  * @param array $vars
  */
-function nfeio_upgrade ($vars) {
+function nfeio_upgrade($vars) {
     $currentlyInstalledVersion = $vars['version'];
 
-    // Deletes old rows
-    $tblconfiguration = [
-        'gnfe_webhook_id',
-        'gnfe_email_nfe',
-        'gnfewhmcsurl',
-        'nfeioWhmcsAdminUrl',
-        'gnfewhmcsadminpath'
-    ];
+    if (version_compare($currentlyInstalledVersion, '1.4.0', '>=')) {
+        $moduleVersion = '2.0.0';
 
-    foreach ($tblconfiguration as $field) {
-        Capsule::table('tblconfiguration')
-            ->where('setting', '=', $field)
-            ->delete();
+        if (Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'version')->count() === 0) {
+            Capsule::table('tbladdonmodules')->insert(['module' => 'nfeio', 'setting' => 'version', 'value' => $moduleVersion]);
+        } else {
+            Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'version')->update(['value' => $moduleVersion]);
+        }
+
+        // Deletes old rows of tblconfiguration table.
+        if (Capsule::schema()->hasColumn('tblconfiguration', 'gnfewhmcsadminpath')) {
+            $tblConfigOldRows = [
+                'gnfe_webhook_id',
+                'gnfe_email_nfe',
+                'gnfewhmcsurl',
+                'gnfewhmcsadminpath'
+            ];
+
+            try {
+                foreach ($tblConfigOldRows as $field) {
+                    Capsule::table('tblconfiguration')
+                        ->where('setting', '=', $field)
+                        ->delete();
+                }
+            } catch (Exception $e) {
+                nfeio_log('nfeio', 'nfeio_upgrade', 'Delete tblconfiguration old rows: Capsule->delete()', $e->getMessage(), '');
+            }
+        }
+
+        // Renames the table gofasnfeio to nfeio.
+        if (Capsule::schema()->hasTable('gofasnfeio')) {
+            try {
+                $pdo = Capsule::connection()->getPdo();
+                $pdo->beginTransaction();
+
+                try {
+                    $cmd = $pdo->prepare('RENAME TABLE gofasnfeio TO nfeio');
+                    $cmd->execute();
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    nfeio_log('nfeio', 'nfeio_upgrade', 'RENAME TABLE gofasnfeio TO nfeio: cmd->execute', $e->getMessage(), '');
+                }
+
+                $pdo->commit();
+            } catch (Exception $e) {
+                nfeio_log('nfeio', 'nfeio_upgrade', 'RENAME TABLE gofasnfeio TO nfeio: pdo->commit()', $e->getMessage(), '');
+            }
+        }
+
+        nfeio_create_tables();
+        nfeio_set_whmcs_admin_url($_SERVER['DOCUMENT_ROOT'], $_SERVER['HTTP_HOST']);
+        nfeio_set_issue_nfe_conds();
+        nfeio_set_initial_date();
     }
-
-    nfeio_set_admin_url($_SERVER['DOCUMENT_ROOT'], $_SERVER['HTTP_HOST']);
-    nfeio_create_tables();
 }

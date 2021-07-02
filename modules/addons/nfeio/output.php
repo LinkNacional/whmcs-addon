@@ -2,8 +2,8 @@
 
 use WHMCS\Database\Capsule;
 
-if (!function_exists('gofasnfeio_output')) {
-    function gofasnfeio_output($vars) {
+if (!function_exists('nfeio_output')) {
+    function nfeio_output($vars) {
         require_once __DIR__ . '/functions.php';
         $params = nfeio_get_setting();
         foreach (Capsule::table('tblconfiguration')->where('setting', '=', 'nfeioWhmcsAdminUrl')->get(['value']) as $gnfewhmcsadminurl_) {

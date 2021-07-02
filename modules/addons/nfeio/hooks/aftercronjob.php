@@ -15,7 +15,7 @@ if (Capsule::table('tbladdonmodules')->where('setting','=','last_cron')->count()
 
 if (!isset($params['issue_note_after_days']) || $params['issue_note_after_days'] <= 0) {
     foreach (Capsule::table('nfeio')->orderBy('id', 'desc')->where('status', '=', 'Waiting')->get(['id', 'invoice_id', 'services_amount']) as $waiting) {
-        nfeio_log('nfeio', 'aftercronjob - checktablegofasnfeio', '', $waiting,'', '');
+        nfeio_log('nfeio', 'aftercronjob - checktablenfeio', '', $waiting,'', '');
 
         $data = getTodaysDate(false);
         $currentDate = toMySQLDate($data);

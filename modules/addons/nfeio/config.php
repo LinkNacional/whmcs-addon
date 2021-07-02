@@ -37,7 +37,7 @@
 //         try {
 //             if (Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'issue_note_conditions')->count() == 0) {
 //                 try {
-//                     nfeio_save_issue_nfe_conds();
+//                     nfeio_set_issue_nfe_conds();
 //                 } catch (\Throwable $th) {}
 //             }
 //         } catch (\Throwable $th) {}
@@ -219,7 +219,7 @@
 
         if (version_compare($previous_version,'1.2.7','<')) {
             set_code_service_camp_gofasnfeio();
-            set_custom_field_ini_date();
+            nfeio_set_initial_date();
         }
 
 //         /*
