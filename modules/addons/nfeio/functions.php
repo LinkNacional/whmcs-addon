@@ -329,14 +329,18 @@ if (!function_exists('nfeio_queue_nfe')) {
                 if (!$nfe_for_invoice['status'] || $create_all) {
                     $create_all = true;
                     try {
-                        $service_code_row = Capsule::table('nfeio')->where('service_code', '=', $item['code_service'])->where('invoice_id', '=', $invoice_id)->where('status', '=', 'waiting')->get(['id', 'services_amount']);
+                        $serviceCodeRow = Capsule::table('nfeio')
+                            ->where('service_code', '=', $item['code_service'])
+                            ->where('invoice_id', '=', $invoice_id)
+                            ->where('status', '=', 'waiting')
+                            ->get(['id', 'services_amount'])[0];
 
-                        if (count($service_code_row) == 1) {
-                            $mountDB = floatval($service_code_row[0]->services_amount);
+                        if (count($serviceCodeRow) == 1) {
+                            $mountDB = floatval($serviceCodeRow->services_amount);
                             $mount_item = floatval($item['amount']);
                             $mount = $mountDB + $mount_item;
 
-                            Capsule::table('nfeio')->where('id', '=', $service_code_row[0]->id)->update(['services_amount' => $mount]);
+                            Capsule::table('nfeio')->where('id', '=', $serviceCodeRow->id)->update(['services_amount' => $mount]);
                         } else {
                             Capsule::table('nfeio')->insert($data);
                         }
@@ -767,13 +771,15 @@ if (!function_exists('nfeio_update_nfe')) {
 
 if (!function_exists('nfeio_get_local_nfe')) {
     /**
-    * Returns the data of a NFe from the local WHMCS database according with an invoice id
-    .
-    * @param string $invoice_id
-    * @param string $values
+     * Returns the data of a NFe from the local WHMCS database according with an invoice id.
+     * The values to return can be specifed within the $values array.
+     *
+     * @param string $invoice_id
+     * @param string $values
+     *
+     * @return string
+     */
 
-    * @return string
-    */
     function nfeio_get_local_nfe($invoice_id, $values) {
         foreach (Capsule::table('nfeio')->where('invoice_id', '=', $invoice_id)->orderBy('id', 'desc')->get($values) as $key => $value) {
             $nfe_for_invoice[$key] = json_decode(json_encode($value), true);
