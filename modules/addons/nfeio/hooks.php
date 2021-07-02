@@ -6,7 +6,7 @@ add_hook('InvoiceCreation', 1, function ($vars) {
     require_once __DIR__ . '/functions.php';
     require_once __DIR__ . '/sendNFE.php';
     require_once __DIR__ . '/hooks/dailycronjob.php';
-    require_once __DIR__ . '/hooks/invoicecreation.php';
+    require_once __DIR__ . '/hooks/invoicecreation.php'; // Comentado, consigo criar e publicar uma fatura
 });
 
  add_hook('InvoicePaid', 1, function ($vars) {

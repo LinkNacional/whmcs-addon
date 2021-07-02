@@ -445,91 +445,6 @@ if (!function_exists('nfeio_issue_nfe')) {
     }
 }
 
-if (!function_exists('nfeio_get_company_info')) {
-    /**
-     * Returns the current company data fetched from NFe.io.
-     *
-     * @return array
-     */
-    function nfeio_get_company_info() {
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id'),
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Accept: application/json',
-                'Authorization: ' . nfeio_get_setting('api_key')
-            ]
-        ]);
-
-        $response = json_decode(curl_exec($curl), true);
-        $response = $response['companies'];
-
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-        curl_close($curl);
-
-        return $httpCode === 200
-            ? $response
-            : array('error' =>
-                'Http code: ' . $httpCode . '| ' .
-                'Resposta: ' . $response . '| ' .
-                'Consulte: https://nfe.io/docs/desenvolvedores/rest-api/nota-fiscal-de-servico-v1/#/Companies/Companies_Get');
-    }
-}
-
-if (!function_exists('nfeio_transfer_rps_number_handling')) {
-    /**
-     * Transfer the RPS number handling to the NFe.io.
-     *
-     * @param array $nfeioCompany
-     * @param int $rpsNumber
-     */
-    function nfeio_transfer_rps_number_handling($nfeioCompany, $rpsNumber) {
-        $nfeioCompany['rpsNumber'] = $rpsNumber + 1;
-        $requestBody = json_encode($nfeioCompany);
-
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id'),
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_CUSTOMREQUEST => 'PUT',
-            CURLOPT_POSTFIELDS => $requestBody,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Accept: application/json',
-                'Authorization: ' . nfeio_get_setting('api_key')
-            ]
-        ]);
-
-        $response = json_decode(curl_exec($curl), true);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-        curl_close($curl);
-
-        if ($httpCode !== 200) {
-            $response =
-                'Http code: ' . $httpCode . ' | ' .
-                'Resposta: ' . $response . ' | ' .
-                'Consulte: https://nfe.io/docs/desenvolvedores/rest-api/nota-fiscal-de-servico-v1/#/Companies/Companies_Put';
-
-            nfeio_log('nfeio', 'nfeio_transfer_rps_number_handling', $requestBody, $response, '', '');
-        } else {
-            $nfe_rps = intval(nfeio_get_last_nfe()['rpsNumber']);
-            $whmcs_rps = intval(nfeio_get_setting('rps_number'));
-
-            // Verify if the NFe's RPS is greater than or equals to the RPS located in WHMCS.
-            if ($nfe_rps >= $whmcs_rps) {
-                Capsule::table('tbladdonmodules')->where('module', 'nfeio')->where('setting', 'rps_number')->update(['value' => 'RPS administrado pela NFe.']);
-            } else {
-                nfeio_log('nfeio', 'nfeio_transfer_rps_number_handling', $requestBody, 'Erro ao tentar passar tratativa de RPS para NFe. ' . $response, '', '');
-            }
-        }
-    }
-}
-
 if (!function_exists('nfeio_test_connection')) {
     /**
      * Returns the HTTP code of an request sent to NFe.io in order to test
@@ -966,7 +881,7 @@ if (!function_exists('nfeio_download_log')) {
         $text .= PHP_EOL . '====================================================================FIM DO ARQUIVO======================================================================' . PHP_EOL;
 
         header('Content-type: text/plain');
-        header('Content-Disposition: attachment; filename="default-filename.txt"');
+        header('Content-Disposition: attachment; filename="log-modulo-nfeio.txt"');
         print $text;
         exit();
     }
@@ -1014,6 +929,7 @@ if (!function_exists('nfeio_get_client_issue_nfe_cond')) {
 
             return 'seguir configuração do módulo nfe.io';
         } catch (Exception $e) {
+            nfeio_log('nfeio', 'nfeio_get_client_issue_nfe_cond', '', $e->getMessage(), '');
             return ['error' => $e->getMessage()];
         }
     }
@@ -1084,9 +1000,9 @@ if (!function_exists('nfeio_save_client_issue_nfe_cond')) {
                     ]);
                 } else {
                     Capsule::table('mod_nfeio_custom_configs')
-                    ->where('client_id', '=', $clientId)
-                    ->where('key', '=', 'issue_nfe_cond')
-                    ->update(['value' => $newCond]);
+                        ->where('client_id', '=', $clientId)
+                        ->where('key', '=', 'issue_nfe_cond')
+                        ->update(['value' => $newCond]);
                 }
             }
         } catch (Exception $e) {
@@ -1125,6 +1041,11 @@ if (!function_exists('nfeio_set_whmcs_admin_url')) {
 }
 
 if (!function_exists('nfeio_get_module_last_version')) {
+    /**
+     * Returns the latest version of the module.
+     *
+     * @return string
+     */
     function nfeio_get_module_last_version() {
         $curl = curl_init();
         curl_setopt_array($curl, [
@@ -1150,7 +1071,7 @@ if (!function_exists('nfeio_get_module_last_version')) {
             return $lastVersion;
         } else {
             nfeio_log('nfeio', 'nfeio_get_module_last_version', 'https://api.github.com/repos/nfe/whmcs-addon/releases', 'httpCode: ' . $httpCode . 'response: ' . $response, '');
-            return [];
+            return '';
         }
     }
 }

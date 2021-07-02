@@ -8,8 +8,3 @@ if (
 ) {
     return ['Emitir nota fiscal quando' => nfeio_show_issue_invoice_conds($vars['userid'])];
 }
-
-return [
-    'Módulo NFE.io' =>
-        'Acesse a configuração do modulo para habilitar a emissão personalizada de nota fiscal por usuário.'
-];

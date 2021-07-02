@@ -14,9 +14,9 @@ require_once __DIR__ . '/database.php';
 function nfeio_config() {
     if ($_GET['doc_log']) nfeio_download_log();
 
-    $moduleVersion = '1.0.0';
-    $currentlyInstalledVersion = nfeio_get_setting('version');
+    $moduleVersion = '2.0.0';
     $whmcsSystemUrl = nfeio_get_whmcs_url();
+    $whmcsSystemAdminUrl = nfeio_get_whmcs_admin_url();
 
     $moduleSettings = array(
         'name' => 'NFE.io',
@@ -27,7 +27,7 @@ function nfeio_config() {
 
             'header' => array(
                 'Description' => '
-                <h4 style="padding-top: 5px;">Módulo Nota Fiscal NFE.io para WHMCS | v' . $moduleVersion . '</h4>
+                <h4 style="padding-top: 5px;">Módulo NFE.io de Nota Fiscal para WHMCS | v' . $moduleVersion . '</h4>
                 <a style="text-decoration:underline;" href="https://app.nfe.io/companies/edit/fiscal/' . nfeio_get_setting('company_id') . '" target="_blank">
                 Consultar: RPS / Série do RPS
                 </a>'
@@ -61,11 +61,11 @@ function nfeio_config() {
             'issue_note_default_cond' => array(
                 'FriendlyName' => 'Quando emitir NFE',
                 'Type' => 'dropdown',
-                'Options' => 'Quando a fatura é gerada,Quando a fatura é paga,Manualmente.',
+                'Options' => 'Quando a fatura é gerada,Quando a fatura é paga,Manualmente',
                 'Default' => 'Manualmente'
             ),
 
-            'municipal_inscri' => array(
+            'municipal_inscri_field' => array(
                 'FriendlyName' => 'Inscrição Municipal',
                 'Type' => 'dropdown',
                 'Options' => nfeio_get_custom_fields_dropdown(),
@@ -93,6 +93,13 @@ function nfeio_config() {
                 'Default' => 'Número da fatura',
             ),
 
+            'custom_invoice_descri' => array(
+                'FriendlyName' => 'Adicione uma informação personalizada na nota fiscal:',
+                'Type' => 'text',
+                'Default' => '',
+                'Description' => 'Esta informação será acrescida após detalhes da fatura.',
+            ),
+
             'email_nfe_config' => array(
                 'FriendlyName' => 'Disparar e-mail com a nota',
                 'Type' => 'yesno',
@@ -112,8 +119,8 @@ function nfeio_config() {
                 'Type' => 'yesno',
                 'Default' => 'yes',
                 'Description' => 'Marque essa opção para salvar informações de diagnóstico no
-                <a target="_blank" style="text-decoration:underline;" href="' . $whmcsSystemUrl . 'systemmodulelog.php">Log de Módulo</a>
-                | Baixar log <a target="_blank" href="' . $whmcsSystemUrl . 'configaddonmods.php?doc_log=true" style="text-decoration:underline;">AQUI
+                <a target="_blank" style="text-decoration:underline;" href="' . $whmcsSystemAdminUrl . 'systemmodulelog.php">Log de Módulo</a>
+                | Baixar log <a target="_blank" href="' . $whmcsSystemAdminUrl . 'configaddonmods.php?doc_log=true" style="text-decoration:underline;">AQUI
                 </a>',
             ),
 
@@ -129,13 +136,6 @@ function nfeio_config() {
                 'Type' => 'radio',
                 'Options' => 'Sim,Não',
                 'Default' => 'Não'
-            ),
-
-            'custom_invoice_descri' => array(
-                'FriendlyName' => 'Adicione uma informação personalizada na nota fiscal:',
-                'Type' => 'text',
-                'Default' => '',
-                'Description' => 'Esta informação será acrescida após detalhes da fatura.',
             ),
 
             'development_env' => array(

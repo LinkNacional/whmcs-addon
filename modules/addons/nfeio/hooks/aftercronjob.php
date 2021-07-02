@@ -29,7 +29,7 @@ if (!isset($params['issue_note_after_days']) || $params['issue_note_after_days']
         }
 
         foreach ($getQuery as $invoices) {
-            emitNFE($invoices,$waiting);
+            nfeio_issue_note_to_nfe($invoices,$waiting);
         }
     }
 }

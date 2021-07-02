@@ -4,7 +4,7 @@ defined('WHMCS') or exit;
 
 use WHMCS\Database\Capsule;
 
-function emitNFE($invoices,$nfeio) {
+function nfeio_issue_note_to_nfe($invoices,$nfeio) {
     $invoice = localAPI('GetInvoice', ['invoiceid' => $invoices->id], false);
     $client = localAPI('GetClientsDetails', ['clientid' => $invoices->userid], false);
 
@@ -34,7 +34,7 @@ function emitNFE($invoices,$nfeio) {
     $service_code = $nfeio->service_code ? $nfeio->service_code : $params['service_code'];
 
     //description nfe
-    if ($params['InvoiceDetails'] == 'Número da fatura') {
+    if ($params['custom_invoice_descri'] == 'Número da fatura') {
         $gnfeWhmcsUrl = Capsule::table('tblconfiguration')->where('setting', '=', 'Domain')->get(['value'])[0]->value;
 
         $desc = 'Nota referente a fatura #' . $invoices->id . '  ';
@@ -43,9 +43,9 @@ function emitNFE($invoices,$nfeio) {
         }
         $desc .= ' ' . $params['custom_invoice_descri'];
 
-    } elseif ($params['InvoiceDetails'] == 'Nome dos serviços') {
+    } elseif ($params['custom_invoice_descri'] == 'Nome dos serviços') {
         $desc = substr(implode("\n", $line_items), 0, 600) . ' ' . $params['custom_invoice_descri'];
-    } elseif ($params['InvoiceDetails'] == 'Número da fatura + Nome dos serviços') {
+    } elseif ($params['custom_invoice_descri'] == 'Número da fatura + Nome dos serviços') {
         $gnfeWhmcsUrl = Capsule::table('tblconfiguration')->where('setting', '=', 'Domain')->get(['value'])[0]->value;
         $desc = 'Nota referente a fatura #' . $invoices->id . '  ';
         if ($params['send_invoice_url'] === 'Sim') {
@@ -55,7 +55,7 @@ function emitNFE($invoices,$nfeio) {
     }
 
     nfeio_log('nfeio', 'description-custom_invoice_descri', $params['custom_invoice_descri'], '','', '');
-    nfeio_log('nfeio', 'description-InvoiceDetails', $params['InvoiceDetails'], '','', '');
+    nfeio_log('nfeio', 'description-custom_invoice_descri', $params['custom_invoice_descri'], '','', '');
     nfeio_log('nfeio', 'description', $params, '','', '');
 
     //define address
