@@ -20,7 +20,7 @@ function nfeio_config() {
         'name' => 'NFE.io',
         'description' => 'Módulo NFE.io de Nota Fiscal para WHMCS',
         'version' => $moduleVersion,
-        'author' => '<a title="NFE.io Nota Fiscal WHMCS" href="https://github.com/nfe/whmcs-addon/" target="_blank" ><img src="' . nfeio_get_whmcs_admin_url() . 'modules/addons/gofasnfeio/lib/logo.png"></a>',
+        'author' => '<a title="NFE.io Nota Fiscal WHMCS" href="https://github.com/nfe/whmcs-addon/" target="_blank" ><img src="' . nfeio_get_whmcs_admin_url() . 'modules/addons/nfeio/lib/logo.png"></a>',
         'fields' => array (
 
             'api_key' => array(

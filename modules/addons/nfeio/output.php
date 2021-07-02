@@ -37,7 +37,7 @@ if (!function_exists('gofasnfeio_output')) {
             }
         }
 
-        foreach (Capsule::table('gofasnfeio')->orderBy('id', 'desc')->get(['id']) as $nfes_) {
+        foreach (Capsule::table('nfeio')->orderBy('id', 'desc')->get(['id']) as $nfes_) {
             $nfes[] = $nfes_->id;
         }
         if ($_REQUEST['page']) {
@@ -81,7 +81,7 @@ if (!function_exists('gofasnfeio_output')) {
                 $tag = 'a ';
                 $a_style = '';
                 $li_class = 'class="enabled"';
-                $href = $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&page=' . $page_num;
+                $href = $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&page=' . $page_num;
             } elseif ((int) $page_num === (int) $nfes_page) {
                 $tag = 'span ';
                 $a_style = 'style="background: #337ab7; color: #fff"';
@@ -96,7 +96,7 @@ if (!function_exists('gofasnfeio_output')) {
             $preview_tag = 'span ';
         } else {
             $preview_class = ' class="previous" ';
-            $preview_href = ' href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&page=' . ($nfes_page - 1) . '" ';
+            $preview_href = ' href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&page=' . ($nfes_page - 1) . '" ';
             $preview_tag = 'a ';
         }
         if ((int) $nfes_page === (int) $nfes_pages) {
@@ -105,14 +105,14 @@ if (!function_exists('gofasnfeio_output')) {
             $next_tag = 'span ';
         } else {
             $next_class = ' class="next" ';
-            $next_href = ' href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&page=' . ($nfes_page + 1) . '" ';
+            $next_href = ' href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&page=' . ($nfes_page + 1) . '" ';
             $next_tag = 'a ';
         }
         $pagination .= '<li ' . $preview_class . '><' . $preview_tag . ' ' . $preview_href . '>« Página anterior</' . $preview_tag . '></li>';
         $pagination .= $pagination_;
         $pagination .= '<li ' . $next_class . '><' . $next_tag . ' ' . $next_href . '>Próxima página »</' . $next_tag . '></li>';
 
-        foreach (Capsule::table('gofasnfeio')->
+        foreach (Capsule::table('nfeio')->
             orderBy('id', 'desc')->
             whereBetween('id', [end($nfess), reset($nfess)])->
             take($take)->
@@ -154,17 +154,17 @@ if (!function_exists('gofasnfeio_output')) {
 								<td style="width: 420px;">
 
 
-                                <button ' . $disabled['a'] . ' onclick="location.href=`' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&invoice_id=' . $value->invoice_id . '&gnfe_create=yes`" class="btn btn-primary" id="gnfe_generate" title="Emitir Nota Fiscal">Emitir NFE</button>
+                                <button ' . $disabled['a'] . ' onclick="location.href=`' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&invoice_id=' . $value->invoice_id . '&gnfe_create=yes`" class="btn btn-primary" id="gnfe_generate" title="Emitir Nota Fiscal">Emitir NFE</button>
                                 <button ' . $disabled['b'] . 'target="_blank" onclick="location.href=`https://app.nfe.io/companies/' . $params['company_id'] . '/service-invoices/' . $value->nfe_id . '`" class="btn btn-success" id="gnfe_view" title="Ver Nota Fiscal">Visualizar</button>
-                                <button ' . $disabled['c'] . ' onclick="location.href=`' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&invoice_id=' . $value->invoice_id . '&gnfe_cancel=' . $value->nfe_id . '&services_amount=' . $value->services_amount . '&environment=' . $value->environment . '&flow_status=' . $value->flow_status . '&user_id=' . $value->user_id . '&created_at=' . $value->created_at . '`" class="btn btn-danger" id="gnfe_cancel" title="Cancelar Nota Fiscal">Cancelar NFE</button>
-                                <button ' . $disabled['d'] . ' onclick="location.href=`' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&gnfe_email=' . $value->nfe_id . '`" class="btn btn-primary" id="gnfe_email" title="Enviar Nota Fiscal por Email">Enviar Email</button>';
+                                <button ' . $disabled['c'] . ' onclick="location.href=`' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&invoice_id=' . $value->invoice_id . '&gnfe_cancel=' . $value->nfe_id . '&services_amount=' . $value->services_amount . '&environment=' . $value->environment . '&flow_status=' . $value->flow_status . '&user_id=' . $value->user_id . '&created_at=' . $value->created_at . '`" class="btn btn-danger" id="gnfe_cancel" title="Cancelar Nota Fiscal">Cancelar NFE</button>
+                                <button ' . $disabled['d'] . ' onclick="location.href=`' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&gnfe_email=' . $value->nfe_id . '`" class="btn btn-primary" id="gnfe_email" title="Enviar Nota Fiscal por Email">Enviar Email</button>';
         }
         if ((int) $nfes_total > 0) {
             echo '
 
-            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=code_product" class="btn btn-primary" id="gnfe_cancel" title="Código de Serviços">Código de Serviços</a>
-            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=nfeio_legacy" class="btn btn-primary" title="Sistema legado">Sistema legado</a>
-            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=test_connection" class="btn btn-success" title="Sistema legado">Testar conexão</a>
+            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&action=code_product" class="btn btn-primary" id="gnfe_cancel" title="Código de Serviços">Código de Serviços</a>
+            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&action=nfeio_legacy" class="btn btn-primary" title="Sistema legado">Sistema legado</a>
+            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&action=test_connection" class="btn btn-success" title="Sistema legado">Testar conexão</a>
         <div><h3>Listagem de notas fiscais</h3>' . $nfes_total . ' Itens encontrados.<br>Exibindo de ' . $nfes_from . ' a ' . $nfes_to . '. Página ' . $nfes_page . ' de ' . $nfes_pages . '</div>
 		<div class="tab-content admin-tabs">
 					<table id="sortabletbl0" class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3">
@@ -192,8 +192,8 @@ if (!function_exists('gofasnfeio_output')) {
 				';
         } else {
             echo '
-            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=code_product" class="btn btn-primary" id="gnfe_cancel" title="Código de Serviços">Código de Serviços</a>
-            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=nfeio_legacy" class="btn btn-primary" title="Sistema legado">Sistema legado</a>
+            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&action=code_product" class="btn btn-primary" id="gnfe_cancel" title="Código de Serviços">Código de Serviços</a>
+            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&action=nfeio_legacy" class="btn btn-primary" title="Sistema legado">Sistema legado</a>
 		<div>
 			<h3>Nenhuma nota fiscal gerada até o momento</h3>
 		</div>';
@@ -207,14 +207,14 @@ if (!function_exists('gofasnfeio_output')) {
                 if ($queue !== 'success') {
                     $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">Erro ao salvar nota fiscal no DB: ' . $queue . '</div>';
                     header_remove();
-                    header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&gnfe_message=' . base64_encode(urlencode($message)));
+                    header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&gnfe_message=' . base64_encode(urlencode($message)));
 
                     exit;
                 }
                 if ($queue === 'success') {
                     $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Nota fiscal enviada para processamento</div>';
                     header_remove();
-                    header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&gnfe_message=' . base64_encode(urlencode($message)));
+                    header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&gnfe_message=' . base64_encode(urlencode($message)));
 
                     exit;
                 }
@@ -222,7 +222,7 @@ if (!function_exists('gofasnfeio_output')) {
                 if ($queue !== 'success') {
                     $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">Erro ao salvar nota fiscal no DB: ' . 'nota fiscal já solicitada' . '</div>';
                     header_remove();
-                    header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&gnfe_message=' . base64_encode(urlencode($message)));
+                    header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&gnfe_message=' . base64_encode(urlencode($message)));
 
                     exit;
                 }
@@ -234,14 +234,14 @@ if (!function_exists('gofasnfeio_output')) {
                 $nfeio_update_nfe = nfeio_update_nfe((object) ['id' => $_REQUEST['gnfe_cancel'], 'status' => 'Cancelled', 'servicesAmount' => $_REQUEST['services_amount'], 'environment' => $_REQUEST['environment'], 'flow_status' => $_REQUEST['flow_status']], $_REQUEST['user_id'], $_REQUEST['invoice_id'], 'n/a', $_REQUEST['created_at'], date('Y-m-d H:i:s'));
                 $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Nota fiscal cancelada com sucesso</div>';
                 header_remove();
-                header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&gnfe_message=' . base64_encode(urlencode($message)));
+                header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&gnfe_message=' . base64_encode(urlencode($message)));
 
                 exit;
             }
             if ($delete_nfe->message) {
                 $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">' . $delete_nfe->message . '</div>';
                 header_remove();
-                header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&gnfe_message=' . base64_encode(urlencode($message)));
+                header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&gnfe_message=' . base64_encode(urlencode($message)));
 
                 exit;
             }
@@ -251,14 +251,14 @@ if (!function_exists('gofasnfeio_output')) {
             if (!$gnfe_email->message) {
                 $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Email Enviado com Sucesso</div>';
                 header_remove();
-                header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&gnfe_message=' . base64_encode(urlencode($message)));
+                header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&gnfe_message=' . base64_encode(urlencode($message)));
 
                 exit;
             }
             if ($gnfe_email->message) {
                 $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">' . $gnfe_email->message . '</div>';
                 header_remove();
-                header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&gnfe_message=' . base64_encode(urlencode($message)));
+                header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&gnfe_message=' . base64_encode(urlencode($message)));
 
                 exit;
             }

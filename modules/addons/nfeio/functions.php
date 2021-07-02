@@ -19,7 +19,7 @@ if (!function_exists('nfeio_get_setting')) {
             if ($getOne === false) {
                 $setting = [];
 
-                foreach (Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->get(['setting', 'value']) as $settings) {
+                foreach (Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->get(['setting', 'value']) as $settings) {
                     $setting[$settings->setting] = $settings->value;
                 }
 
@@ -27,7 +27,7 @@ if (!function_exists('nfeio_get_setting')) {
             }
 
             return Capsule::table('tbladdonmodules')
-                ->where('module', '=', 'gofasnfeio')
+                ->where('module', '=', 'nfeio')
                 ->where('setting', '=', $getOne)
                 ->get(['value'])[0]->value;
 
@@ -329,16 +329,16 @@ if (!function_exists('nfeio_queue_nfe')) {
                 if (!$nfe_for_invoice['status'] || $create_all) {
                     $create_all = true;
                     try {
-                        $service_code_row = Capsule::table('gofasnfeio')->where('service_code', '=', $item['code_service'])->where('invoice_id', '=', $invoice_id)->where('status', '=', 'waiting')->get(['id', 'services_amount']);
+                        $service_code_row = Capsule::table('nfeio')->where('service_code', '=', $item['code_service'])->where('invoice_id', '=', $invoice_id)->where('status', '=', 'waiting')->get(['id', 'services_amount']);
 
                         if (count($service_code_row) == 1) {
                             $mountDB = floatval($service_code_row[0]->services_amount);
                             $mount_item = floatval($item['amount']);
                             $mount = $mountDB + $mount_item;
 
-                            Capsule::table('gofasnfeio')->where('id', '=', $service_code_row[0]->id)->update(['services_amount' => $mount]);
+                            Capsule::table('nfeio')->where('id', '=', $service_code_row[0]->id)->update(['services_amount' => $mount]);
                         } else {
-                            Capsule::table('gofasnfeio')->insert($data);
+                            Capsule::table('nfeio')->insert($data);
                         }
                     } catch (\Exception $e) {
                         return $e->getMessage();
@@ -362,7 +362,7 @@ if (!function_exists('nfeio_issue_nfe')) {
      */
     function nfeio_issue_nfe($postfields) {
         try {
-            $webhook_url = nfeio_get_whmcs_url() . 'modules/addons/gofasnfeio/callback.php';
+            $webhook_url = nfeio_get_whmcs_url() . 'modules/addons/nfeio/callback.php';
 
             $nfeio_webhook_id = Capsule::table('tblconfiguration')->where('setting', '=', 'nfeio_webhook_id')->get(['value'])[0]->value;
 
@@ -521,7 +521,7 @@ if (!function_exists('nfeio_transfer_rps_number_handling')) {
 
             // Verify if the NFe's RPS is greater than or equals to the RPS located in WHMCS.
             if ($nfe_rps >= $whmcs_rps) {
-                Capsule::table('tbladdonmodules')->where('module', 'gofasnfeio')->where('setting', 'rps_number')->update(['value' => 'RPS administrado pela NFe.']);
+                Capsule::table('tbladdonmodules')->where('module', 'nfeio')->where('setting', 'rps_number')->update(['value' => 'RPS administrado pela NFe.']);
             } else {
                 nfeio_log('nfeio', 'nfeio_transfer_rps_number_handling', $requestBody, 'Erro ao tentar passar tratativa de RPS para NFe. ' . $response, '', '');
             }
@@ -756,7 +756,7 @@ if (!function_exists('nfeio_update_nfe')) {
                 $id = $id_gofasnfeio;
                 $camp = 'id';
             }
-            Capsule::table('gofasnfeio')->where($camp, '=', $id)->update($data);
+            Capsule::table('nfeio')->where($camp, '=', $id)->update($data);
 
             return 'success';
         } catch (\Exception $e) {
@@ -775,7 +775,7 @@ if (!function_exists('nfeio_get_local_nfe')) {
     * @return string
     */
     function nfeio_get_local_nfe($invoice_id, $values) {
-        foreach (Capsule::table('gofasnfeio')->where('invoice_id', '=', $invoice_id)->orderBy('id', 'desc')->get($values) as $key => $value) {
+        foreach (Capsule::table('nfeio')->where('invoice_id', '=', $invoice_id)->orderBy('id', 'desc')->get($values) as $key => $value) {
             $nfe_for_invoice[$key] = json_decode(json_encode($value), true);
         }
         return $nfe_for_invoice['0'];
@@ -940,7 +940,7 @@ if (!function_exists('nfeio_download_log')) {
         $days = 5;
 
         $moduleConfigs = [];
-        foreach (Capsule::table('tbladdonmodules')->where('module','=','gofasnfeio')->get(['setting', 'value']) as $row) {
+        foreach (Capsule::table('tbladdonmodules')->where('module','=','nfeio')->get(['setting', 'value']) as $row) {
             $moduleConfigs[$row->setting] = $row->value;
         }
 
@@ -980,7 +980,7 @@ if (!function_exists('nfeio_update_nfe_status')) {
      */
     function nfeio_update_nfe_status($invoice_id, $status) {
         try {
-            return Capsule::table('gofasnfeio')->where('invoice_id','=',$invoice_id)->update(['status' => $status]);
+            return Capsule::table('nfeio')->where('invoice_id','=',$invoice_id)->update(['status' => $status]);
         } catch (Exception $e) {
             return $e->getMessage();
         }
@@ -1026,7 +1026,7 @@ if (!function_exists('nfeio_show_issue_invoice_conds')) {
      */
     function nfeio_show_issue_invoice_conds($clientId) {
         try {
-            $conditions = Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->where('setting', '=', 'issue_note_conditions')->get(['value'])[0]->value;
+            $conditions = Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'issue_note_conditions')->get(['value'])[0]->value;
             $conditions = explode(',', $conditions);
 
             $previousClientCond = Capsule::table('mod_nfeio_custom_configs')->where('client_id', '=', $clientId)->get(['value'])[0]->value;
@@ -1034,7 +1034,7 @@ if (!function_exists('nfeio_show_issue_invoice_conds')) {
             $select = '<select name="issue_note_cond" class="form-control select-inline">';
 
             // Sets the previous issue condition in the first index of array $conditions.
-            // in order to the previous condition be showed in the client prifile.
+            // in order to the previous condition be showed in the client profile.
             if ($previousClientCond != null) {
                 $previousCondKey = array_search($previousClientCond, $conditions);
                 unset($conditions[$previousCondKey]);
@@ -1102,7 +1102,7 @@ if (!function_exists('nfeio_save_issue_nfe_conds')) {
         try {
             $conditions = 'Quando a fatura é gerada,Quando a fatura é paga,Seguir configuração do módulo NFE.io';
 
-            Capsule::table('tbladdonmodules')->insert(['module' => 'gofasnfeio','setting' => 'issue_note_conditions','value' => $conditions]);
+            Capsule::table('tbladdonmodules')->insert(['module' => 'nfeio','setting' => 'issue_note_conditions','value' => $conditions]);
         } catch (Exception $e) {
             return ['error' => $e->getMessage()];
         }
@@ -1114,7 +1114,6 @@ if (!function_exists('nfeio_get_whmcs_admin_url')) {
         return Capsule::table('tblconfiguration')->where('setting', '=', 'nfeioWhmcsAdminUrl')->get(['value'])[0]->value;
     }
 }
-
 
 if (!function_exists('nfeio_set_admin_url')) {
     /**

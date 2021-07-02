@@ -72,21 +72,21 @@ if (!function_exists('nfeio_create_tables')) {
 
 if (!function_exists('set_custom_field_ini_date')) {
     function set_custom_field_ini_date() {
-        $data = getTodaysDate(false);
-        $dataAtual = toMySQLDate($data);
+        $currentDate = getTodaysDate(false);
+        $currentDate = toMySQLDate($data);
 
         try {
             if (
                 Capsule::table('tbladdonmodules')
-                    ->where('module', '=', 'gofasnfeio')
+                    ->where('module', '=', 'nfeio')
                     ->where('setting', '=', 'initial_date')
                     ->count() < 1
             ) {
                 Capsule::table('tbladdonmodules')
                 ->insert([
-                    'module' => 'gofasnfeio',
+                    'module' => 'nfeio',
                     'setting' => 'initial_date',
-                    'value' => $dataAtual
+                    'value' => $currentDate
                 ]);
             }
         } catch (\Exception $e) {

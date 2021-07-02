@@ -20,14 +20,14 @@ use WHMCS\Database\Capsule;
             }
             $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #5cb85c;color: #ffffff;padding: 5px;text-align: center;">Código Salvo</div>';
             header_remove();
-            header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=code_product&gnfe_message=' . base64_encode(urlencode($message)));
+            header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&action=code_product&gnfe_message=' . base64_encode(urlencode($message)));
 
             exit;
         } catch (\Exception $e) {
             $e->getMessage();
             $message = '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">' . $e->getMessage() . '</div>';
             header_remove();
-            header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=code_product&gnfe_message=' . base64_encode(urlencode($message)));
+            header('Location: ' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&action=code_product&gnfe_message=' . base64_encode(urlencode($message)));
 
             exit;
         }
@@ -61,8 +61,8 @@ use WHMCS\Database\Capsule;
     }
 
     echo '
-            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=nfeio" class="btn btn-primary" id="gnfe_cancel" title="NFE.io">NFE.io</a>
-            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=gofasnfeio&action=nfeio_legacy" class="btn btn-primary" title="Sistema legado">Sistema legado</a>
+            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&action=nfeio" class="btn btn-primary" id="gnfe_cancel" title="NFE.io">NFE.io</a>
+            <a href="' . $nfeioWhmcsAdminUrl . 'addonmodules.php?module=nfeio&action=nfeio_legacy" class="btn btn-primary" title="Sistema legado">Sistema legado</a>
 
             <div class="tab-content admin-tabs">
 					<table id="sortabletbl0" class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3">

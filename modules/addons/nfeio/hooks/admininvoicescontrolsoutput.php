@@ -39,14 +39,14 @@ if ($_REQUEST['gnfe_create']) {
 }
 
 if ($_REQUEST['gnfe_open']) {
-    foreach (Capsule::table('gofasnfeio')->where('invoice_id', '=', $_REQUEST['gnfe_open'])->get(['id', 'nfe_id']) as $nfe) {
+    foreach (Capsule::table('nfeio')->where('invoice_id', '=', $_REQUEST['gnfe_open'])->get(['id', 'nfe_id']) as $nfe) {
         $url = 'https://app.nfe.io/companies/' . $params['company_id'] . '/service-invoices/' . $nfe->nfe_id;
         echo "<script type='text/javascript' language='Javascript'>window.open('" . $url . "');</script>";
     }
 }
 
 if ($_REQUEST['gnfe_cancel']) {
-    foreach (Capsule::table('gofasnfeio')->where('invoice_id', '=', $_REQUEST['id'])->get(['id', 'nfe_id']) as $nfe) {
+    foreach (Capsule::table('nfeio')->where('invoice_id', '=', $_REQUEST['id'])->get(['id', 'nfe_id']) as $nfe) {
         $delete_nfe = nfeio_delete_nfe($nfe->nfe_id);
         if ($delete_nfe->message) {
             nfeio_log('nfeio', 'admininvoicecontorloutput - gnfe_cancel',$nfe->nfe_id, $delete_nfe, 'ERROR', '');
@@ -68,7 +68,7 @@ if ($_REQUEST['gnfe_cancel']) {
     }
 }
 if ($_REQUEST['gnfe_email']) {
-    foreach (Capsule::table('gofasnfeio')->where('invoice_id', '=', $_REQUEST['id'])->get(['id', 'nfe_id']) as $nfe) {
+    foreach (Capsule::table('nfeio')->where('invoice_id', '=', $_REQUEST['id'])->get(['id', 'nfe_id']) as $nfe) {
         $gnfe_email = nfeio_email_nfe($_REQUEST['gnfe_email']);
         if (!$gnfe_email->message) {
             nfeio_log('nfeio', 'admininvoicecontorloutput - gnfe_email',$_REQUEST['gnfe_email'], $gnfe_email, 'OK', '');

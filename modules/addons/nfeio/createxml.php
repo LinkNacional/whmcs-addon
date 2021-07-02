@@ -4,7 +4,7 @@ require_once __DIR__.'/../../../init.php';
 use WHMCS\Database\Capsule;
 
 $invoice_id = $_GET['nfe_id'];
-    $row = Capsule::table('gofasnfeio')->where('id', '=', $invoice_id)->get(['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'flow_status', 'pdf', 'created_at', 'updated_at', 'id']);
+    $row = Capsule::table('nfeio')->where('id', '=', $invoice_id)->get(['invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'flow_status', 'pdf', 'created_at', 'updated_at', 'id']);
     $nfe = $row[0];
     if ((string) $nfe->status === (string) 'Issued') {
         $nfe_xml_for_invoice = nfeio_xml_nfe($nfe->nfe_id);
@@ -32,7 +32,7 @@ $invoice_id = $_GET['nfe_id'];
     function nfeio_get_setting($set = false)
     {
         $setting = [];
-        foreach (Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->get(['setting', 'value']) as $settings) {
+        foreach (Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->get(['setting', 'value']) as $settings) {
             $setting[$settings->setting] = $settings->value;
         }
         if ($set) {

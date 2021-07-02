@@ -17,16 +17,16 @@ if ($post) {
     //fim verificar o ambiente
 
     //verificar se a nfe existe na tabela
-    if (Capsule::table('gofasnfeio')->where('nfe_id', '=', $post['id'])->count() == 0 ) {
+    if (Capsule::table('nfeio')->where('nfe_id', '=', $post['id'])->count() == 0 ) {
         return '';
     }
     //fim verificar se a nfe existe na tabela
 
     $params = [];
-    foreach (Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->get(['setting', 'value']) as $settings) {
+    foreach (Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->get(['setting', 'value']) as $settings) {
         $params[$settings->setting] = $settings->value;
     }
-    foreach (Capsule::table('gofasnfeio')->where('nfe_id', '=', $post['id'])->
+    foreach (Capsule::table('nfeio')->where('nfe_id', '=', $post['id'])->
     get(['id', 'invoice_id', 'user_id', 'nfe_id', 'status', 'services_amount', 'environment', 'flow_status', 'pdf', 'created_at', 'updated_at']) as $key => $value) {
         $nfe_for_invoice[$key] = json_decode(json_encode($value), true);
     }
@@ -47,12 +47,12 @@ if ($post) {
         ];
 
         try {
-            $save_nfe = Capsule::table('gofasnfeio')->where('nfe_id', '=', $post['id'])->update($new_nfe);
+            $save_nfe = Capsule::table('nfeio')->where('nfe_id', '=', $post['id'])->update($new_nfe);
         } catch (\Exception $e) {
             $e->getMessage();
         }
     }
-    $invoice_id = Capsule::table('gofasnfeio')->where('nfe_id', '=', $post['id'])->get(['invoice_id'])[0];
+    $invoice_id = Capsule::table('nfeio')->where('nfe_id', '=', $post['id'])->get(['invoice_id'])[0];
 
     if ($post['status'] == 'Error') {
         nfeio_log('nfeio', 'callback', '', $post, 'ERROR', '');

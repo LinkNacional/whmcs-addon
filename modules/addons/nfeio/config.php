@@ -35,7 +35,7 @@
 //         nfeio_create_tables();
 
 //         try {
-//             if (Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->where('setting', '=', 'issue_note_conditions')->count() == 0) {
+//             if (Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'issue_note_conditions')->count() == 0) {
 //                 try {
 //                     nfeio_save_issue_nfe_conds();
 //                 } catch (\Throwable $th) {}
@@ -53,7 +53,7 @@
 
 //         // A versão do módulo precisa ser inserida no tabela do banco de dados, porque ela não existia no banco de dados até agora.
 //         if (!$previous_version) {
-//             Capsule::table('tbladdonmodules')->insert(['module' => 'gofasnfeio', 'setting' => 'module_version', 'value' => $module_version]);
+//             Capsule::table('tbladdonmodules')->insert(['module' => 'nfeio', 'setting' => 'module_version', 'value' => $module_version]);
 //             $previous_version = $module_version;
 //         }
 //         $previous_version_int = (int) preg_replace('/[^0-9]/', '', $previous_version);
@@ -69,7 +69,7 @@
 //             // Se a versão do módulo for igual a versão do módulo no
 //             // banco de dados mais 1, então a atualização é permitida.
 //             if ($module_major_minor_version === $previous_major_minor_version + 1) {
-//                 Capsule::table('tbladdonmodules')->where('module', 'gofasnfeio')->where('setting', 'module_version')->update(['value' => $module_version]);
+//                 Capsule::table('tbladdonmodules')->where('module', 'nfeio')->where('setting', 'module_version')->update(['value' => $module_version]);
 //             } else {
 //                 $update_denied = <<<EOT
 //                     <p style="font-size: 14px; color: red;">
@@ -108,7 +108,7 @@
 //             // Verifica se a configuração rps_number existe no banco de dados.
 //             if (Capsule::table('tbladdonmodules')->where('setting','=','rps_number')->count() == 0) {
 //                 try {
-//                     Capsule::table('tbladdonmodules')->insert(['module' => 'gofasnfeio', 'setting' => 'rps_number', 'value' => $nfe_rps]);
+//                     Capsule::table('tbladdonmodules')->insert(['module' => 'nfeio', 'setting' => 'rps_number', 'value' => $nfe_rps]);
 //                 } catch (\Throwable $th) {}
 //             }
 
@@ -129,11 +129,11 @@
 
 //         /*
 //             /// REMOVER VERIFICAÇÃO APÓS VERSÃO 2.0
-//             $verificarEmail = Capsule::table('tbladdonmodules')->where('module', '=', 'gofasnfeio')->where('setting', '=', 'email_nfe_config')->count();
+//             $verificarEmail = Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'email_nfe_config')->count();
 //             if (empty($verificarEmail)) {
 //                 // echo "vazio";
 //                 try {
-//                     Capsule::table('tbladdonmodules')->insert(['module' => 'gofasnfeio', 'setting' => 'email_nfe_config', 'value' => 'on']);
+//                     Capsule::table('tbladdonmodules')->insert(['module' => 'nfeio', 'setting' => 'email_nfe_config', 'value' => 'on']);
 //                 } catch (\Exception $e) {
 //                     $e->getMessage();
 //                 }
@@ -217,10 +217,10 @@
 //         //create tables
 //         create_table_product_code();
 
-//         if (version_compare($previous_version,'1.2.7','<')) {
-//             set_code_service_camp_gofasnfeio();
-//             set_custom_field_ini_date();
-//         }
+        if (version_compare($previous_version,'1.2.7','<')) {
+            set_code_service_camp_gofasnfeio();
+            set_custom_field_ini_date();
+        }
 
 //         /*
 //             $intro = ['intro' => [
@@ -248,7 +248,7 @@
 //             ]];
 
 //             try {
-//                 Capsule::table('tbladdonmodules')->where('module', 'gofasnfeio')->where('setting', 'rps_serial_number')->update(['value' => nfeio_get_company_info()['rpsSerialNumber']]);
+//                 Capsule::table('tbladdonmodules')->where('module', 'nfeio')->where('setting', 'rps_serial_number')->update(['value' => nfeio_get_company_info()['rpsSerialNumber']]);
 //             } catch (\Throwable $th) {}
 //             $rps_serial_number = ['rps_serial_number' => [
 //                 'FriendlyName' => 'Série do RPS',
@@ -372,7 +372,7 @@
 //                 'name' => 'NFE.io',
 //                 'description' => 'Módulo Nota Fiscal NFE.io para WHMCS',
 //                 'version' => $module_version,
-//                 'author' => '<a title="NFE.io Nota Fiscal WHMCS" href="https://github.com/nfe/whmcs-addon/" target="_blank" ><img src="' . $whmcs_url . 'modules/addons/gofasnfeio/lib/logo.png"></a>',
+//                 'author' => '<a title="NFE.io Nota Fiscal WHMCS" href="https://github.com/nfe/whmcs-addon/" target="_blank" ><img src="' . $whmcs_url . 'modules/addons/nfeio/lib/logo.png"></a>',
 //                 'fields' => $fields,
 //             ];
 

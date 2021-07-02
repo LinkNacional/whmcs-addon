@@ -61,14 +61,14 @@ Dentro do admin do WHMCS é possível gerenciar a nota fiscal manualmente.
 
 1. Faça download do módulo [neste link](https://github.com/nfe/whmcs-addon/archive/master.zip "neste link");
 2. Descompacte o arquivo .zip;
-3. Copie o diretório `/gofasnfeio/`, localizados na pasta `/modules/addons/` do arquivo recém descompactado, para a pasta `/modules/addons/` da instalação do WHMCS;
+3. Copie o diretório `/nfeio/`, localizados na pasta `/modules/addons/` do arquivo recém descompactado, para a pasta `/modules/addons/` da instalação do WHMCS;
 
 ## ATUALIZAÇÃO
 
 1. Faça download do módulo [neste link](https://github.com/nfe/whmcs-addon/archive/master.zip "neste link");
 2. Descompacte o arquivo .zip;
-3. Dentro da instalação do seu WHMCS remova a pasta `/modules/addons/gofasnfeio/`;
-4. Copie o diretório `/gofasnfeio/`, localizados na pasta `/modules/addons/` do arquivo recém descompactado, para a pasta `/modules/addons/` da instalação do WHMCS;
+3. Dentro da instalação do seu WHMCS remova a pasta `/modules/addons/nfeio/`;
+4. Copie o diretório `/nfeio/`, localizados na pasta `/modules/addons/` do arquivo recém descompactado, para a pasta `/modules/addons/` da instalação do WHMCS;
 
 ## PRÉ CONFIGURAÇÃO E ATIVAÇÃO
 
@@ -111,7 +111,7 @@ se desejar fazer essas configurações individualmente pode entrar em configura�
 Para inserir um link da nota fiscal do PDF e XML, edite o arquivo viewinvoice.tpl da pasta do template do WHMCS, utilize o exemplo abaixo:
 
 ```
-{if $status eq "Paid" || $clientsdetails.userid eq "6429"}<i class="fal fa-file-invoice" aria-hidden="true"></i> NOTA FISCAL  <a href="/modules/addons/gofasnfeio/pdf.php?invoice_id={$invoiceid}" target="_blank" class="btn btn-link" tite="Nota Fiscal disponível 24 horas após confirmação de pagamento.">PDF</a> | <a href="/modules/addons/gofasnfeio/xml.php?invoice_id={$invoiceid}" target="_blank" class="btn btn-link" tite="Nota Fiscal disponível 24 horas após confirmação de pagamento.">XML</a>{/if}
+{if $status eq "Paid" || $clientsdetails.userid eq "6429"}<i class="fal fa-file-invoice" aria-hidden="true"></i> NOTA FISCAL  <a href="/modules/addons/nfeio/pdf.php?invoice_id={$invoiceid}" target="_blank" class="btn btn-link" tite="Nota Fiscal disponível 24 horas após confirmação de pagamento.">PDF</a> | <a href="/modules/addons/nfeio/xml.php?invoice_id={$invoiceid}" target="_blank" class="btn btn-link" tite="Nota Fiscal disponível 24 horas após confirmação de pagamento.">XML</a>{/if}
 ```
 
 ## EMISSÃO PERSONALIZADA DE NOTAS PARA CLIENTE
