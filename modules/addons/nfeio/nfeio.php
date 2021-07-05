@@ -14,6 +14,8 @@ require_once __DIR__ . '/database.php';
 function nfeio_config() {
     if ($_GET['doc_log']) nfeio_download_log();
 
+    nfeio_update();
+
     $moduleVersion = '2.0.0';
     $whmcsSystemUrl = nfeio_get_whmcs_url();
     $whmcsSystemAdminUrl = nfeio_get_whmcs_admin_url();
@@ -194,17 +196,39 @@ function nfeio_deactivate() {
  *
  * @param array $vars
  */
-function nfeio_upgrade($vars) {
-    $currentlyInstalledVersion = $vars['version'];
+function nfeio_update() {
+    $currentlyInstalledVersion = nfeio_get_setting('version');
 
-    if (version_compare($currentlyInstalledVersion, '1.4.0', '>=')) {
+    // Between 1.4.0 and 1.4.9
+    if (
+        version_compare($currentlyInstalledVersion, '1.4.0', '>=')
+        && version_compare($currentlyInstalledVersion, '2.0.0', '<')
+        || empty($currentlyInstalledVersion)
+    ) {
         $moduleVersion = '2.0.0';
 
-        if (Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'version')->count() === 0) {
+        if (Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'version')->count() == 0) {
             Capsule::table('tbladdonmodules')->insert(['module' => 'nfeio', 'setting' => 'version', 'value' => $moduleVersion]);
         } else {
             Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'version')->update(['value' => $moduleVersion]);
         }
+
+        $tblAddonOldRows = ['intro',
+        'rps_serial_number',
+        'rps_number',
+        'issue_note',
+        'issue_note_after',
+        'gnfe_email_nfe_config',
+        'cancel_invoice_cancel_nfe',
+        'debug',
+        'insc_municipal',
+        'cpf_camp',
+        'cnpj_camp',
+        'tax',
+        'InvoiceDetails',
+        'descCustom',
+        'NFEioEnvironment',
+        'footer'];
 
         // Deletes old rows of tblconfiguration table.
         if (Capsule::schema()->hasColumn('tblconfiguration', 'gnfewhmcsadminpath')) {

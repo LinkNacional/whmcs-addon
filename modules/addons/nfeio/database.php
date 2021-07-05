@@ -76,7 +76,7 @@ if (!function_exists('nfeio_set_initial_date')) {
      */
     function nfeio_set_initial_date() {
         $currentDate = getTodaysDate(false);
-        $currentDate = toMySQLDate($data);
+        $currentDate = toMySQLDate($currentDate);
 
         try {
             if (
@@ -91,6 +91,11 @@ if (!function_exists('nfeio_set_initial_date')) {
                     'setting' => 'initial_date',
                     'value' => $currentDate
                 ]);
+            } else {
+                Capsule::table('tbladdonmodules')
+                    ->where('module', '=', 'nfeio')
+                    ->where('setting', '=', 'initial_date')
+                    ->update(['value' => $currentDate]);
             }
         } catch (\Exception $e) {
             nfeio_log('nfeio', 'nfeio_set_initial_date: initial_date', '', $e->getMessage(), '');

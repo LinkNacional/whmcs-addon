@@ -47,7 +47,7 @@ if (!function_exists('nfeio_log')) {
      */
     function nfeio_log($module, $action, $requestString, $responseData, $processedData, $replaceVars = []) {
         if (nfeio_get_setting('debug') === 'on') {
-            nfeio_log($module, $action, $requestString, $responseData, $processedData, $replaceVars);
+            logModuleCall($module, $action, $requestString, $responseData, $processedData, $replaceVars);
         }
     }
 }

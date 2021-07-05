@@ -2,6 +2,7 @@
 
 defined('WHMCS') or exit;
 
+nfeio_log('nfeio', 'invoicecreation', $vars, 'error', '');
 $issueInvoiceCondition = nfeio_get_client_issue_nfe_cond($vars['invoiceid']);
 
 if ($issueInvoiceCondition === 'quando a fatura é gerada') {
