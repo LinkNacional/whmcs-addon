@@ -74,10 +74,10 @@ function nfeio_issue_note_to_nfe($invoices,$nfeio) {
         $client_email = '';
     }
 
-    nfeio_log('nfeio', 'sendNFE - customer', $customer, '','', '');
+    nfeio_log('nfeio', 'nfeio_issue_note_to_nfe - customer', $customer, '','', '');
     $code = nfeio_get_city_postal_code(preg_replace('/[^0-9]/', '', $client['postcode']));
     if ($code == 'ERROR') {
-        nfeio_log('nfeio', 'sendNFE - nfeio_get_city_postal_code', $customer, '','ERROR', '');
+        nfeio_log('nfeio', 'nfeio_issue_note_to_nfe - nfeio_get_city_postal_code', $customer, '','ERROR', '');
         nfeio_update_nfe_status($nfeio->invoice_id,'Error_cep');
     } else {
         //cria o array do request
@@ -89,14 +89,14 @@ function nfeio_issue_note_to_nfe($invoices,$nfeio) {
         $nfe = nfeio_issue_nfe($postfields);
 
         if ($nfe->message) {
-            nfeio_log('nfeio', 'sendNFE', $postfields, $nfe, 'ERROR', '');
+            nfeio_log('nfeio', 'nfeio_issue_note_to_nfe', $postfields, $nfe, 'ERROR', '');
         }
         if (!$nfe->message) {
-            nfeio_log('nfeio', 'sendNFE', $postfields, $nfe, 'OK', '');
+            nfeio_log('nfeio', 'nfeio_issue_note_to_nfe', $postfields, $nfe, 'OK', '');
             $nfeio_update_nfe = nfeio_update_nfe($nfe, $invoices->userid, $invoices->id, 'n/a', date('Y-m-d H:i:s'), date('Y-m-d H:i:s'), $waiting->id);
 
             if ($nfeio_update_nfe && $nfeio_update_nfe !== 'success') {
-                nfeio_log('nfeio', 'sendNFE - nfeio_update_nfe', [$nfe, $invoices->userid, $invoices->id, 'n/a', date('Y-m-d H:i:s'), date('Y-m-d H:i:s'), $waiting->id], $nfeio_update_nfe, 'ERROR', '');
+                nfeio_log('nfeio', 'nfeio_issue_note_to_nfe - nfeio_update_nfe', [$nfe, $invoices->userid, $invoices->id, 'n/a', date('Y-m-d H:i:s'), date('Y-m-d H:i:s'), $waiting->id], $nfeio_update_nfe, 'ERROR', '');
             }
         }
     }

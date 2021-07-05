@@ -505,13 +505,13 @@ if (!function_exists('nfeio_delete_nfe')) {
     /**
      * Sends a DELETE request to the NFe.io in order to delete de NFe.
      *
-     * @param string|int $nf
+     * @param string|int $nfeId
      * @return mixed
      */
-    function nfeio_delete_nfe($nf) {
+    function nfeio_delete_nfe($nfeId) {
         $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nf,
+            CURLOPT_URL => 'https://api.nfe.io/v1/companies/' . nfeio_get_setting('company_id') . '/serviceinvoices/' . $nfeId,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: text/json',
                 'Accept: application/json',
