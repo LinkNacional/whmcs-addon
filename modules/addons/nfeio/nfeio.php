@@ -7,6 +7,7 @@ use WHMCS\Database\Capsule;
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/output.php';
 require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/tests.php';
 
 /**
  * Shows the module setting fields.

@@ -123,7 +123,7 @@ if ((string) $invoice['status'] === (string) 'Draft') {
     $disabled = ['a' => 'disabled="disabled"', 'b' => 'disabled="disabled"', 'c' => 'disabled="disabled"', 'd' => 'disabled="disabled"'];
 }
 
-echo <<<EOT
+echo <<<HTML
     <div style="text-align: left; padding: 8px 0px; max-width: 445px; border-top: 1px solid #ccc; margin: 8px 0px;">
     <div style="margin: 0px 0px 5px 0px;"><strong>Nota Fiscal:</strong>{$invoice_nfe}</div>
         <button {$disabled['a']} onclick="location.href=`{$nfeioWhmcsAdminUrl}invoices.php?action=edit&id={$vars['invoiceid']}&nfeio_create=yes`" class="btn btn-primary" id="nfeio_generate" title="Emitir Nota Fiscal">Emitir NFE</button>
@@ -131,7 +131,7 @@ echo <<<EOT
         <button {$disabled['c']} onclick="location.href=`{$nfeioWhmcsAdminUrl}invoices.php?action=edit&id={$vars['invoiceid']}&nfeio_cancel={$nfe_for_invoice['nfe_id']}`" class="btn btn-danger" id="nfeio_cancel" title="Cancelar Nota Fiscal">Cancelar NFE</button>
         <button {$disabled['d']} onclick="location.href=`{$nfeioWhmcsAdminUrl}invoices.php?action=edit&id={$vars['invoiceid']}&nfeio_email={$nfe_for_invoice['nfe_id']}`" class="btn btn-primary" id="nfeio_email" title="Enviar Nota Fiscal por Email">Enviar Email</button>
     <div>
-EOT;
+HTML;
 
 if ($_REQUEST['nfeio_error']) {
     echo '<div style="position:absolute;top: -5px;width: 50%;left: 25%;background: #d9534f;color: #ffffff;padding: 5px;text-align: center;">' . $_REQUEST['nfeio_error'] . '</div>';

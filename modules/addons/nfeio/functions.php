@@ -821,7 +821,7 @@ if (!function_exists('nfeio_get_product_invoice')) {
                 if ($tax_check === 'Não') {
                     $query .= ' AND tblproducts.tax = 1';
                 } else {
-                    Capsule::table('tblproducts')->update(['apply_tax' => 1]);
+                    Capsule::table('tblproducts')->update(['tax' => 1]);
                 }
 
                 $pdo->beginTransaction();
@@ -930,82 +930,6 @@ if (!function_exists('nfeio_get_client_issue_nfe_cond')) {
             return 'seguir configuração do módulo nfe.io';
         } catch (Exception $e) {
             nfeio_log('nfeio', 'nfeio_get_client_issue_nfe_cond', '', $e->getMessage(), '');
-            return ['error' => $e->getMessage()];
-        }
-    }
-}
-
-if (!function_exists('nfeio_show_issue_invoice_conds')) {
-    /**
-     * Returns a <select> HTML which is used only by the AdminClientProfileTabFields hook
-     * in the file hooks.php.
-     *
-     * @param string $clientId
-     * @return string|array
-     */
-    function nfeio_show_issue_invoice_conds($clientId) {
-        try {
-            $conditions = Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'issue_note_conditions')->get(['value'])[0]->value;
-            $conditions = explode(',', $conditions);
-
-            $previousClientCond = Capsule::table('mod_nfeio_custom_configs')->where('client_id', '=', $clientId)->get(['value'])[0]->value;
-
-            $select = '<select name="issue_note_cond" class="form-control select-inline">';
-
-            // Sets the previous issue condition in the first index of array $conditions.
-            // in order to the previous condition be showed in the client profile.
-            if ($previousClientCond != null) {
-                $previousCondKey = array_search($previousClientCond, $conditions);
-                unset($conditions[$previousCondKey]);
-                $select .= '<option value="' . $previousClientCond . '">' . $previousClientCond . '</option>';
-            } else {
-                $defaultCond = 'Seguir configuração do módulo NFE.io';
-                $defaultCondKey = array_search($defaultCond, $conditions);
-                unset($conditions[$defaultCondKey]);
-                $select .= '<option value="Seguir configuração do módulo NFE.io">Seguir configuração do módulo NFE.io</option>';
-            }
-
-            foreach ($conditions as $cond) {
-                $select .= '<option value="' . $cond . '">' . $cond . '</option>';
-            }
-            $select .= '</select>';
-
-            return $select;
-        } catch (Exception $e) {
-            return ['error' => $e->getMessage()];
-        }
-    }
-}
-
-if (!function_exists('nfeio_save_client_issue_nfe_cond')) {
-    /**
-     * Insert the clientId and his condition of sending invoice in the table mod_nfeio_custom_configs.
-     *
-     * @param string $clientId
-     * @param string $newCond
-     *
-     * @return void|array
-     */
-    function nfeio_save_client_issue_nfe_cond($clientId, $newCond) {
-        try {
-            $previousClientCond = Capsule::table('mod_nfeio_custom_configs')->where('client_id', '=', $clientId)->get(['value'])[0]->value;
-
-            // Verify if there was a change in the issue condition to make any modification in the database.
-            if ($newCond !== $previousClientCond) {
-                if ($previousClientCond == null) {
-                    Capsule::table('mod_nfeio_custom_configs')->insert([
-                        'key' => 'issue_nfe_cond',
-                        'client_id' => $clientId,
-                        'value' => $newCond
-                    ]);
-                } else {
-                    Capsule::table('mod_nfeio_custom_configs')
-                        ->where('client_id', '=', $clientId)
-                        ->where('key', '=', 'issue_nfe_cond')
-                        ->update(['value' => $newCond]);
-                }
-            }
-        } catch (Exception $e) {
             return ['error' => $e->getMessage()];
         }
     }
