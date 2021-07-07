@@ -10,22 +10,35 @@ function nfeio_issue_note_to_nfe($invoices, $nfeio) {
 
 	$params = nfeio_get_setting();
 
-	//create second option from description nfe
-	foreach ($invoice['items']['item'] as $value) {
-		$line_items[] = $value['description'];
+	$line_items = array();
+
+	foreach ($invoice['items']['item'] as $item) {
+		$key = 'service_custom_desc_' . $item['relid'];
+
+		$customDescrip = Capsule::table('mod_nfeio_custom_configs')
+						->where('client_id', '=', $invoices->userid)
+						->where('key', '=', $key)
+						->get(['value'])[0]->value;
+
+		if ($item['type'] === 'Hosting' && !empty($customDescrip)) {
+			$line_items[] = $item['description'] . ' | ' . $customDescrip;
+		} else {
+			$line_items[] = $item['description'];
+		}
 	}
+
+
+	echo '<pre>';
+	print_r($line_items);
+	echo '</pre><hr>';
 
 	//  CPF/CNPJ/NAME
 	$customer = nfeio_get_customer($invoices->userid, $client);
 	nfeio_log('nfeio', 'nfeio_get_customer', $customer, '', '', '');
 
 	if ($customer['doc_type'] == 2) {
-		if ($client['companyname'] != '') {
-			$name = $client['companyname'];
-		} else {
-			$name = $client['fullname'];
-		}
-	} elseif ($customer['doc_type'] == 1 || 'CPF e/ou CNPJ ausente.' == $customer || !$customer['doc_type']) {
+		$name = !empty($client['companyname']) ? $client['companyname'] : $client['fullname'];
+	} elseif ($customer['doc_type'] == 1 || $customer === 'CPF e/ou CNPJ ausente.' || !$customer['doc_type']) {
 		$name = $client['fullname'];
 	}
 	$name = htmlspecialchars_decode($name);
@@ -34,7 +47,7 @@ function nfeio_issue_note_to_nfe($invoices, $nfeio) {
 	$service_code = $nfeio->service_code ? $nfeio->service_code : $params['service_code'];
 
 	//description nfe
-	if ($params['custom_invoice_descri'] == 'Número da fatura') {
+	if ($params['invoice_details'] == 'Número da fatura') {
 		$gnfeWhmcsUrl = Capsule::table('tblconfiguration')->where('setting', '=', 'Domain')->get(['value'])[0]->value;
 
 		$desc = 'Nota referente a fatura #' . $invoices->id . '  ';
@@ -42,9 +55,9 @@ function nfeio_issue_note_to_nfe($invoices, $nfeio) {
 			$desc .= $gnfeWhmcsUrl . 'viewinvoice.php?id=' . $invoices->id;
 		}
 		$desc .= ' ' . $params['custom_invoice_descri'];
-	} elseif ($params['custom_invoice_descri'] == 'Nome dos serviços') {
+	} elseif ($params['invoice_details'] == 'Nome dos serviços') {
 		$desc = substr(implode("\n", $line_items), 0, 600) . ' ' . $params['custom_invoice_descri'];
-	} elseif ($params['custom_invoice_descri'] == 'Número da fatura + Nome dos serviços') {
+	} elseif ($params['invoice_details'] == 'Número da fatura + Nome dos serviços') {
 		$gnfeWhmcsUrl = Capsule::table('tblconfiguration')->where('setting', '=', 'Domain')->get(['value'])[0]->value;
 		$desc = 'Nota referente a fatura #' . $invoices->id . '  ';
 		if ($params['send_invoice_url'] === 'Sim') {
@@ -81,7 +94,9 @@ function nfeio_issue_note_to_nfe($invoices, $nfeio) {
 	} else {
 		//cria o array do request
 		$postfields = createRequestFromAPI($service_code, $desc, $nfeio->services_amount, $customer['document'], $customer['municipal_inscri'], $name, $client_email, $client['countrycode'], $client['postcode'], $street, $number, $client['address2'], $code, $client['city'], $client['state']);
-
+		echo '<pre>';
+		print_r($postfields);
+		echo '</pre><hr>';
 		//envia o requisição
 		$nfe = nfeio_issue_nfe($postfields);
 

@@ -49,9 +49,9 @@ $invoiceId = 815;
 //     $pdo->rollBack();
 // }
 
-echo '<pre>';
-print_r(localApi('GetInvoice', ['invoiceid' => $invoiceId])['items']);
-echo '</pre><hr>';
+// echo '<pre>';
+// print_r(localApi('GetInvoice', ['invoiceid' => $invoiceId])['items']);
+// echo '</pre><hr>';
 
 // $invoiceItemsRelidStdClass = Capsule::table('tblinvoiceitems')->where('invoiceid', '=', $invoiceId)->get(['relid']);
 //
@@ -63,23 +63,40 @@ echo '</pre><hr>';
 
 $clientId = 2;
 $serviceId = 1054;
-$invoiceId = 815;
+$invoiceId = 1001;
 
 $invoice = localApi('GetInvoice', ['invoiceid' => $invoiceId]);
 
-echo '<pre>';
-print_r($invoice);
-echo '</pre><hr>';
+foreach ($invoice['items']['item'] as $item) {
+    $key = 'service_custom_desc_' . $item['relid'];
 
-foreach ($invoice['items']['item'] as $value) {
-    $key = 'service_custom_desc_' . $value['relid'];
-
-    $line_items[] = Capsule::table('mod_nfeio_custom_configs')
+    $customDescrip = Capsule::table('mod_nfeio_custom_configs')
                     ->where('client_id', '=', $clientId)
                     ->where('key', '=', $key)
-                    ->get(['value'])[0]->value . '|' . $value['description'];
+                    ->get(['value'])[0]->value;
+
+    if ($item['type'] === 'Hosting' && !empty($customDescrip)) {
+        $line_items[] = $item['description'] . ' | ' . $customDescrip;
+    } else {
+        $line_items[] = $item['description'];
+    }
 }
 
-echo '<pre>';
-print_r($line_items);
-echo '</pre><hr>';
+// echo '<pre>';
+// print_r($invoice);
+// echo '</pre><hr>';
+
+// echo '<pre>';
+// print_r($line_items);
+// echo '</pre><hr>';
+
+// ----------------------------------------------------------------
+require_once __DIR__ . '/sendNFE.php';
+$initialDate = nfeio_get_setting('initial_date');
+
+$data = getTodaysDate(false);
+$currentDate = toMySQLDate($data);
+
+$invoices = Capsule::table('tblinvoices')->where('id', '=', '888')->where('status', '=', 'Paid')->get(['id', 'userid', 'datepaid', 'total']);
+$nfeio = Capsule::table('nfeio')->where('status', '=', 'Waiting')->where('invoice_id', '=', '888')->get(['id', 'nfe_id', 'status', 'created_at', 'invoice_id', 'service_code', 'services_amount']);
+nfeio_issue_note_to_nfe($invoices[0],$nfeio[0]);
