@@ -135,10 +135,10 @@ if (!function_exists('nfeio_get_customer')) {
                 $cnpj = $cnpj_customfield_value;
             }
             // Cliente não possui CNPJ
-            elseif (!$cnpj_customfield_value and $cnpjCustomFieldValueLength !== 14 and $cnpjCustomFieldValueLength !== 13 and $cpfCustomFiledValueLength !== 13 and $cpfCustomFiledValueLength !== 14) {
+            elseif (!$cnpj_customfield_value && $cnpjCustomFieldValueLength !== 14 && $cnpjCustomFieldValueLength !== 13 && $cpfCustomFiledValueLength !== 13 && $cpfCustomFiledValueLength !== 14) {
                 $cnpj = false;
             }
-            if (($cpf and $cnpj) or (!$cpf and $cnpj)) {
+            if (($cpf && $cnpj) || (!$cpf && $cnpj)) {
                 $custumer['doc_type'] = 2;
                 $custumer['document'] = $cnpj;
                 if ($client['companyname']) {
@@ -146,7 +146,7 @@ if (!function_exists('nfeio_get_customer')) {
                 } elseif (!$client['companyname']) {
                     $custumer['name'] = $client['firstname'] . ' ' . $client['lastname'];
                 }
-            } elseif ($cpf and !$cnpj) {
+            } elseif ($cpf && !$cnpj) {
                 $custumer['doc_type'] = 1;
                 $custumer['document'] = $cpf;
                 $custumer['name'] = $client['firstname'] . ' ' . $client['lastname'];
@@ -154,7 +154,7 @@ if (!function_exists('nfeio_get_customer')) {
             if ($insc_customfield_value != 'NF') {
                 $custumer['municipal_inscri'] = $insc_customfield_value;
             }
-            if (!$cpf and !$cnpj) {
+            if (!$cpf && !$cnpj) {
                 $error = 'CPF e/ou CNPJ ausente.';
             }
             if (!$error) {
@@ -369,13 +369,12 @@ if (!function_exists('nfeio_issue_nfe')) {
 
             if ($nfeio_webhook_id) {
                 $check_webhook = nfeio_check_webhook($nfeio_webhook_id);
-                $error = '';
                 if ($check_webhook['message']) {
                     nfeio_log('nfeio', 'nfeio_issue_nfe - check_webhook', $nfeio_webhook_id, $check_webhook['message'], 'ERROR', '');
                 }
             }
 
-            if ($nfeio_webhook_id and (string) $check_webhook['hooks']['url'] !== (string) $webhook_url) {
+            if ($nfeio_webhook_id && (string) $check_webhook['hooks']['url'] !== (string) $webhook_url) {
                 $create_webhook = nfeio_create_webhook($webhook_url);
 
                 if ($create_webhook['message']) {
@@ -432,7 +431,7 @@ if (!function_exists('nfeio_issue_nfe')) {
 
             curl_close($curl);
 
-            nfeio_log('nfeio', 'nfeio_issue_nfe - curl_init', $error, $info, '', '');
+            nfeio_log('nfeio', 'nfeio_issue_nfe - curl_init', $err, $info, '', '');
             nfeio_log('nfeio', 'nfeio_issue_nfe - CURLOPT_POSTFIELDS', json_encode($postfields), '', '', '');
 
             return $err
@@ -672,6 +671,7 @@ if (!function_exists('nfeio_update_nfe')) {
                 $id = $id_gofasnfeio;
                 $camp = 'id';
             }
+
             Capsule::table('nfeio')->where($camp, '=', $id)->update($data);
 
             return 'success';

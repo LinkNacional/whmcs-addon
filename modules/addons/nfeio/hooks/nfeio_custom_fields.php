@@ -12,7 +12,10 @@ use WHMCS\Database\Capsule;
  */
 function nfeio_save_client_issue_nfe_cond($clientId, $newCond) {
     try {
-        $previousClientCond = Capsule::table('mod_nfeio_custom_configs')->where('client_id', '=', $clientId)->get(['value'])[0]->value;
+        $previousClientCond = Capsule::table('mod_nfeio_custom_configs')
+            ->where('client_id', '=', $clientId)
+            ->where('key', '=', 'issue_nfe_cond')
+            ->get(['value'])[0]->value;
 
         // Verify if there was a change in the issue condition to make any modification in the database.
         if ($newCond !== $previousClientCond) {
@@ -46,7 +49,10 @@ function nfeio_generate_invoice_cond_field($clientId) {
         $conditions = Capsule::table('tbladdonmodules')->where('module', '=', 'nfeio')->where('setting', '=', 'issue_note_conditions')->get(['value'])[0]->value;
         $conditions = explode(',', $conditions);
 
-        $previousClientCond = Capsule::table('mod_nfeio_custom_configs')->where('client_id', '=', $clientId)->get(['value'])[0]->value;
+        $previousClientCond = Capsule::table('mod_nfeio_custom_configs')
+            ->where('client_id', '=', $clientId)
+            ->where('key', '=', 'issue_nfe_cond')
+            ->get(['value'])[0]->value;
 
         $select = '<select name="issue_note_cond" class="form-control select-inline">';
 

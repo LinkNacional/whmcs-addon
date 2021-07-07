@@ -57,7 +57,7 @@ $invoiceId = 815;
 //
 // $invoiceItemsRelid = array();
 // for ($index=0; $index < count($invoiceItemsRelidStdClass); $index++) {
-    // $invoiceItemsRelid[] = $invoiceItemsRelidStdClass[$index]->relid;
+// $invoiceItemsRelid[] = $invoiceItemsRelidStdClass[$index]->relid;
 // }
 //
 
@@ -71,9 +71,9 @@ foreach ($invoice['items']['item'] as $item) {
     $key = 'service_custom_desc_' . $item['relid'];
 
     $customDescrip = Capsule::table('mod_nfeio_custom_configs')
-                    ->where('client_id', '=', $clientId)
-                    ->where('key', '=', $key)
-                    ->get(['value'])[0]->value;
+        ->where('client_id', '=', $clientId)
+        ->where('key', '=', $key)
+        ->get(['value'])[0]->value;
 
     if ($item['type'] === 'Hosting' && !empty($customDescrip)) {
         $line_items[] = $item['description'] . ' | ' . $customDescrip;
@@ -91,7 +91,7 @@ foreach ($invoice['items']['item'] as $item) {
 // echo '</pre><hr>';
 
 // ----------------------------------------------------------------
-require_once __DIR__ . '/sendNFE.php';
+require_once __DIR__ . '/issue_nfe.php';
 $initialDate = nfeio_get_setting('initial_date');
 
 $data = getTodaysDate(false);
@@ -99,4 +99,4 @@ $currentDate = toMySQLDate($data);
 
 $invoices = Capsule::table('tblinvoices')->where('id', '=', '888')->where('status', '=', 'Paid')->get(['id', 'userid', 'datepaid', 'total']);
 $nfeio = Capsule::table('nfeio')->where('status', '=', 'Waiting')->where('invoice_id', '=', '888')->get(['id', 'nfe_id', 'status', 'created_at', 'invoice_id', 'service_code', 'services_amount']);
-nfeio_issue_note_to_nfe($invoices[0],$nfeio[0]);
+nfeio_issue_note_to_nfe($invoices[0], $nfeio[0]);

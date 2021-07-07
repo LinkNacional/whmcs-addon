@@ -4,7 +4,7 @@ defined('WHMCS') or exit;
 
 add_hook('InvoiceCreation', 1, function ($vars) {
 	require_once __DIR__ . '/functions.php';
-	require_once __DIR__ . '/sendNFE.php';
+	require_once __DIR__ . '/issue_nfe.php';
 	require_once __DIR__ . '/hooks/dailycronjob.php';
 	require_once __DIR__ . '/hooks/invoicecreation.php';
 });
@@ -26,13 +26,13 @@ add_hook('InvoiceCancelled', 1, function ($vars) {
 
 add_hook('DailyCronJob', 1, function ($vars) {
 	require_once __DIR__ . '/functions.php';
-	require_once __DIR__ . '/sendNFE.php';
+	require_once __DIR__ . '/issue_nfe.php';
 	require_once __DIR__ . '/hooks/dailycronjob.php';
 });
 
 add_hook('AfterCronJob', 1, function ($vars) {
 	require_once __DIR__ . '/functions.php';
-	require_once __DIR__ . '/sendNFE.php';
+	require_once __DIR__ . '/issue_nfe.php';
 	require_once __DIR__ . '/hooks/aftercronjob.php';
 });
 
