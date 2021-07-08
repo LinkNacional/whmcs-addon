@@ -197,8 +197,9 @@ function nfeio_deactivate() {
  *
  * @param array $vars
  */
-function nfeio_upgrade() {
-	$currentlyInstalledVersion = nfeio_get_setting('version');
+function nfeio_upgrade($vars) {
+	$currentlyInstalledVersion = $vars['version'];
+	nfeio_log('nfeio', 'nfeio_upgrade: $currentlyInstalledVersion', $currentlyInstalledVersion, '', '');
 
 	// Between 1.4.0 and 1.4.9
 	if (
@@ -242,23 +243,23 @@ function nfeio_upgrade() {
 		}
 
 		// Deletes old rows of tblconfiguration table.
-		if (Capsule::schema()->hasColumn('tblconfiguration', 'gnfewhmcsadminpath')) {
-			$tblConfigOldRows = [
-				'gnfe_webhook_id',
-				'gnfe_email_nfe',
-				'gnfewhmcsurl',
-				'gnfewhmcsadminpath',
-			];
+		$tblConfigOldRows = [
+			'gnfe_webhook_id',
+			'gnfe_email_nfe',
+			'gnfewhmcsurl',
+			'gnfewhmcsadminpath',
+			'gnfewhmcsadminurl',
+		];
 
-			try {
-				foreach ($tblConfigOldRows as $row) {
-					Capsule::table('tblconfiguration')
+		try {
+			foreach ($tblConfigOldRows as $row) {
+				Capsule::table('tblconfiguration')
 						->where('setting', '=', $row)
 						->delete();
-				}
-			} catch (Exception $e) {
-				nfeio_log('nfeio', 'nfeio_upgrade', 'Delete tblconfiguration old rows: Capsule->delete()', $e->getMessage(), '');
 			}
+			nfeio_log('nfeio', 'nfeio_upgrade', 'Delete tblconfiguration old rows: Capsule->delete()', 'SUCCESS', '');
+		} catch (Exception $e) {
+			nfeio_log('nfeio', 'nfeio_upgrade', 'Delete tblconfiguration old rows: Capsule->delete()', $e->getMessage(), '');
 		}
 
 		// Renames the table gofasnfeio to nfeio.
@@ -275,6 +276,7 @@ function nfeio_upgrade() {
 					nfeio_log('nfeio', 'nfeio_upgrade', 'RENAME TABLE gofasnfeio TO nfeio: cmd->execute', $e->getMessage(), '');
 				}
 
+				nfeio_log('nfeio', 'nfeio_upgrade', 'RENAME TABLE gofasnfeio TO nfeio', 'SUCCESS', '');
 				$pdo->commit();
 			} catch (Exception $e) {
 				nfeio_log('nfeio', 'nfeio_upgrade', 'RENAME TABLE gofasnfeio TO nfeio: pdo->commit()', $e->getMessage(), '');
@@ -285,6 +287,6 @@ function nfeio_upgrade() {
 		nfeio_set_whmcs_admin_url($_SERVER['DOCUMENT_ROOT'], $_SERVER['HTTP_HOST']);
 		nfeio_set_issue_nfe_conds();
 		nfeio_set_initial_date();
-		nfeio_log('nfeio', 'nfeio_upgrade', 'Upgrade successfull.', $e->getMessage(), '');
+		nfeio_log('nfeio', 'nfeio_upgrade', 'Upgrade successfull.', '', '');
 	}
 }
