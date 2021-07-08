@@ -62,24 +62,23 @@ $invoiceId = 815;
 //
 
 $clientId = 2;
-$serviceId = 1054;
 $invoiceId = 1001;
 
 $invoice = localApi('GetInvoice', ['invoiceid' => $invoiceId]);
 
 foreach ($invoice['items']['item'] as $item) {
-    $key = 'service_custom_desc_' . $item['relid'];
+	$key = 'service_custom_desc_' . $item['relid'];
 
-    $customDescrip = Capsule::table('mod_nfeio_custom_configs')
-        ->where('client_id', '=', $clientId)
-        ->where('key', '=', $key)
-        ->get(['value'])[0]->value;
+	$customDescrip = Capsule::table('mod_nfeio_custom_configs')
+		->where('client_id', '=', $clientId)
+		->where('key', '=', $key)
+		->get(['value'])[0]->value;
 
-    if ($item['type'] === 'Hosting' && !empty($customDescrip)) {
-        $line_items[] = $item['description'] . ' | ' . $customDescrip;
-    } else {
-        $line_items[] = $item['description'];
-    }
+	if ($item['type'] === 'Hosting' && !empty($customDescrip)) {
+		$line_items[] = $item['description'] . ' | ' . $customDescrip;
+	} else {
+		$line_items[] = $item['description'];
+	}
 }
 
 // echo '<pre>';
@@ -97,6 +96,6 @@ $initialDate = nfeio_get_setting('initial_date');
 $data = getTodaysDate(false);
 $currentDate = toMySQLDate($data);
 
-$invoices = Capsule::table('tblinvoices')->where('id', '=', '888')->where('status', '=', 'Paid')->get(['id', 'userid', 'datepaid', 'total']);
-$nfeio = Capsule::table('nfeio')->where('status', '=', 'Waiting')->where('invoice_id', '=', '888')->get(['id', 'nfe_id', 'status', 'created_at', 'invoice_id', 'service_code', 'services_amount']);
+$invoices = Capsule::table('tblinvoices')->where('id', '=', $invoiceId)->where('status', '=', 'Paid')->get(['id', 'userid', 'datepaid', 'total']);
+$nfeio = Capsule::table('nfeio')->where('status', '=', 'Waiting')->where('invoice_id', '=', $invoiceId)->get(['id', 'nfe_id', 'status', 'created_at', 'invoice_id', 'service_code', 'services_amount']);
 nfeio_issue_note_to_nfe($invoices[0], $nfeio[0]);

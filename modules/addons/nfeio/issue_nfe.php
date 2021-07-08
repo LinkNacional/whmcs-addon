@@ -16,7 +16,7 @@ function nfeio_issue_note_to_nfe($invoices, $nfeio) {
 	$params = nfeio_get_setting();
 
 	// Gets the complete description of the NFe.
-	$description = nfeio_get_nfe_description($invoices->userid, $invoice['items']['item']);
+	$description = nfeio_get_nfe_description($invoices->userid, $invoices->id, $invoice['items']['item']);
 	nfeio_log('nfeio', 'nfeio_issue_note_to_nfe -> nfeio_get_nfe_description', '', $description, '');
 
 	// CPF/CNPJ/NAME
@@ -122,9 +122,9 @@ function nfeio_get_nfe_json_request($service_code, $description, $services_amoun
 					'code' => $code,
 					'name' => $city,
 				],
-				'state' => $state
-			]
-		]
+				'state' => $state,
+			],
+		],
 	];
 }
 
@@ -134,7 +134,7 @@ function nfeio_get_nfe_json_request($service_code, $description, $services_amoun
  * @param string $userId
  * @param array $invoiceItems
  */
-function nfeio_get_nfe_description($userId, $invoiceItems) {
+function nfeio_get_nfe_description($userId, $invoiceId, $invoiceItems) {
 	$items = nfeio_get_nfe_items_descriptions($userId, $invoiceItems);
 	$sendInvoiceDetails = nfeio_get_setting('invoice_details');
 	$sendInvoiceUrl = nfeio_get_setting('send_invoice_url');
@@ -144,9 +144,9 @@ function nfeio_get_nfe_description($userId, $invoiceItems) {
 
 	switch ($sendInvoiceDetails) {
 		case 'Número da fatura':
-			$desc = 'Nota referente a fatura #' . $userId . '  ';
+			$desc = 'Nota referente a fatura #' . $invoiceId . '  ';
 			$desc .= $sendInvoiceUrl === 'Sim'
-				? $nfeioWhmcsUrl . 'viewinvoice.php?id=' . $userId
+				? $nfeioWhmcsUrl . 'viewinvoice.php?id=' . $invoiceId
 				: '';
 
 			break;
@@ -157,9 +157,9 @@ function nfeio_get_nfe_description($userId, $invoiceItems) {
 			break;
 
 		default:
-			$desc = 'Nota referente a fatura #' . $userId . '  ';
+			$desc = 'Nota referente a fatura #' . $invoiceId . '  ';
 			$desc .= $sendInvoiceUrl === 'Sim'
-				? $nfeioWhmcsUrl . 'viewinvoice.php?id=' . $userId
+				? $nfeioWhmcsUrl . 'viewinvoice.php?id=' . $invoiceId
 				: '';
 			$desc .= ' | ' . substr(implode("\n", $items), 0, 600);
 
