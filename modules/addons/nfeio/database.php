@@ -77,10 +77,10 @@ function nfeio_set_initial_date() {
 	$currentDate = toMySQLDate($currentDate);
 
 	try {
-		Capsule::table('tbladdonmodules')
-			->where('module', '=', 'gofasnfeio')
-			->where('setting', '=', 'initial_date')
-			->update(['module' => 'nfeio']);
+		// Capsule::table('tbladdonmodules')
+		// 	->where('module', '=', 'gofasnfeio')
+		// 	->where('setting', '=', 'initial_date')
+		// 	->update(['module' => 'nfeio']);
 		/*
 		 if (
 		 Capsule::table('tbladdonmodules')
