@@ -36,7 +36,7 @@ function nfeio_issue_note_to_nfe($invoices, $nfeio) {
 	$service_code = $nfeio->service_code ? $nfeio->service_code : $params['service_code'];
 	nfeio_log('nfeio', 'nfeio_issue_note_to_nfe -> nfeio_get_nfe_description', '', $service_code, '');
 
-	// Adress
+	// Address
 	if (strpos($client['address1'], ',')) {
 		$array_adress = explode(',', $client['address1']);
 		$street = $array_adress[0];

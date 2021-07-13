@@ -7,15 +7,13 @@ use WHMCS\Database\Capsule;
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/output.php';
 require_once __DIR__ . '/database.php';
-require_once __DIR__ . '/tests.php';
 
 /**
  * Shows the module setting fields.
  */
-function nfeio_config() {
-	if ($_GET['doc_log']) {
-		nfeio_download_log();
-	}
+function nfeio_config()
+{
+	if ($_GET['doc_log']) nfeio_download_log();
 
 	$moduleVersion = '2.0.0';
 	$whmcsSystemUrl = nfeio_get_whmcs_url();
@@ -158,13 +156,13 @@ function nfeio_config() {
 
 	if (version_compare($lastVersion, $moduleVersion, '>')) {
 		$moduleSettings['fields']['header']['Description'] .=
-		'<span style="display: block; color: red; font-size: 14px; padding-top: 10px; padding-bottom: 5px;">
+			'<span style="display: block; color: red; font-size: 14px; padding-top: 10px; padding-bottom: 5px;">
             <i class="fas fa-exclamation-triangle"></i> Há uma nova versão disponível. Acesse:
             <a style="text-decoration:underline;" href="https://github.com/nfe/whmcs-addon/releases" target="_blank">Nova versão</a>
         </span>';
 	} else {
 		$moduleSettings['fields']['header']['Description'] .=
-		'<span style="display: block; color: green; font-size: 14px; padding-top: 10px; padding-bottom: 5px;">
+			'<span style="display: block; color: green; font-size: 14px; padding-top: 10px; padding-bottom: 5px;">
             <i class="fas fa-check-square"></i> Esta é a versão mais recente do módulo.
         </span>';
 	}
@@ -176,7 +174,8 @@ function nfeio_config() {
  * Performed when the module is activated.
  * Creates the tables in the database.
  */
-function nfeio_activate() {
+function nfeio_activate()
+{
 	nfeio_create_tables();
 	nfeio_set_whmcs_admin_url($_SERVER['DOCUMENT_ROOT'], $_SERVER['HTTP_HOST']);
 	nfeio_set_issue_nfe_conds();
@@ -187,7 +186,8 @@ function nfeio_activate() {
  * Performed when teh module is deactivated.
  * Undo all actions done in nfeio_config()
  */
-function nfeio_deactivate() {
+function nfeio_deactivate()
+{
 	// TODO
 }
 
@@ -197,7 +197,8 @@ function nfeio_deactivate() {
  *
  * @param array $vars
  */
-function nfeio_upgrade($vars) {
+function nfeio_upgrade($vars)
+{
 	$currentlyInstalledVersion = $vars['version'];
 	nfeio_log('nfeio', 'nfeio_upgrade: $currentlyInstalledVersion', $currentlyInstalledVersion, '', '');
 
@@ -216,30 +217,36 @@ function nfeio_upgrade($vars) {
 		}
 
 		// Deletes old rows of tbladdonmodules table.
-		if (Capsule::schema()->hasTable('tbladdonmodules')) {
-			$tblAddonOldRows = ['intro',
-				'rps_serial_number',
-				'rps_number',
-				'issue_note',
-				'issue_note_after',
-				'gnfe_email_nfe_config',
-				'cancel_invoice_cancel_nfe',
-				'debug',
-				'insc_municipal',
-				'cpf_camp',
-				'cnpj_camp',
-				'tax',
-				'InvoiceDetails',
-				'descCustom',
-				'NFEioEnvironment',
-				'footer', ];
+		$tblAddonOldRows = [
+			'api_key',
+			'company_id',
+			'service_code',
+			'issue_note_default_cond',
+			'issue_note_after',
+			'gnfe_email_nfe_config',
+			'cancel_invoice_cancel_nfe',
+			'debug',
+			'insc_municipal',
+			'cpf_camp',
+			'cnpj_camp',
+			'tax',
+			'InvoiceDetails',
+			'send_invoice_url',
+			'descCustom',
+			'NFEioEnvironment',
+			'footer',
+			'access',
+			'last_cron',
+			'module_version',
+			'issue_note_conditions'
+		];
 
-			foreach ($tblAddonOldRows as $row) {
-				Capsule::table('tbladdonmodules')
-					->where('module', '=', 'gofasnfeio')
-					->where('setting', '=', $row)
-					->delete();
-			}
+		foreach ($tblAddonOldRows as $row) {
+			nfeio_log('nfeio', 'Deleting', 'Deleting row' . $row, '', '');
+			Capsule::table('tbladdonmodules')
+				->where('module', '=', 'gofasnfeio')
+				->where('setting', '=', $row)
+				->delete();
 		}
 
 		// Deletes old rows of tblconfiguration table.
@@ -254,8 +261,8 @@ function nfeio_upgrade($vars) {
 		try {
 			foreach ($tblConfigOldRows as $row) {
 				Capsule::table('tblconfiguration')
-						->where('setting', '=', $row)
-						->delete();
+					->where('setting', '=', $row)
+					->delete();
 			}
 			nfeio_log('nfeio', 'nfeio_upgrade', 'Delete tblconfiguration old rows: Capsule->delete()', 'SUCCESS', '');
 		} catch (Exception $e) {
